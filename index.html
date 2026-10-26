@@ -1,0 +1,662 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>בדיוק בערך</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;500;700;900&family=Rubik:wght@400;500;700&display=swap">
+<style>
+/* Layout: explorer's notebook beside an encyclopedia sheet; heat scale is the only loud color */
+:root{
+  --paper:#EEF1EE; --sheet:#FFFFFF; --ink:#1B2A2E; --ink-2:#51625F; --line:#D3DBD7;
+  --accent:#2E4C9E; --accent-soft:#E2E8F6; --stamp:#B5462E; --link:#2E4C9E;
+  --cold:#3E7CB1; --mild:#6E9E95; --warm:#D3952A; --hot:#D2552B; --found:#2E8B57;
+  --ok-bg:#E3F2E8; --ok-fg:#1F5E3B; --bad-bg:#F8E4DF; --bad-fg:#8A2E1C;
+  --shade:rgba(20,30,32,.55);
+  --font-read:"Frank Ruhl Libre","David Libre","Times New Roman",serif;
+  --font-ui:"Rubik","Assistant","Arial Hebrew",Arial,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#111718; --sheet:#192124; --ink:#E3ECEA; --ink-2:#9FB0AD; --line:#2B3739;
+  --accent:#93A9F2; --accent-soft:#232D47; --stamp:#E58466; --link:#A3B6F6;
+  --cold:#6FA6D6; --mild:#86BAAE; --warm:#E8B04F; --hot:#EE7A4F; --found:#5CC08A;
+  --ok-bg:#183626; --ok-fg:#A6E2BE; --bad-bg:#3D1F18; --bad-fg:#F2B4A3; --shade:rgba(0,0,0,.65);
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#111718; --sheet:#192124; --ink:#E3ECEA; --ink-2:#9FB0AD; --line:#2B3739;
+  --accent:#93A9F2; --accent-soft:#232D47; --stamp:#E58466; --link:#A3B6F6;
+  --cold:#6FA6D6; --mild:#86BAAE; --warm:#E8B04F; --hot:#EE7A4F; --found:#5CC08A;
+  --ok-bg:#183626; --ok-fg:#A6E2BE; --bad-bg:#3D1F18; --bad-fg:#F2B4A3; --shade:rgba(0,0,0,.65);
+  color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{background:var(--paper);color:var(--ink)}
+body{font-family:var(--font-ui);font-size:16px;line-height:1.6;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 40px}
+h1,h2,h3{font-family:var(--font-read);text-wrap:balance;margin:0}
+button,input,select{font-family:var(--font-ui);font-size:16px;color:var(--ink)}
+button{cursor:pointer;border-radius:8px;border:1px solid var(--line);background:var(--sheet);padding:9px 16px}
+button:hover{border-color:var(--accent)}
+button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--sheet);font-weight:500}
+button.ghost{background:transparent}
+input,select{border:1px solid var(--line);background:var(--sheet);border-radius:8px;padding:9px 12px;width:100%}
+.wrap{max-width:1180px;margin:0 auto}
+.label{font-size:13px;color:var(--ink-2);letter-spacing:.02em}
+.err{color:var(--bad-fg);font-size:14px;min-height:1.2em}
+/* header */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--paper);border-bottom:1px solid var(--line);margin:0 calc(-1*max(16px,env(safe-area-inset-left,0px)));padding:10px max(16px,env(safe-area-inset-left,0px))}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--paper)}
+.top .wrap{display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px}
+.brand{font-family:var(--font-read);font-weight:900;font-size:22px;letter-spacing:-.01em}
+.brand span{color:var(--stamp)}
+.stats{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:14px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.stats b{color:var(--ink);font-weight:500}
+.heat{display:flex;align-items:center;gap:8px;margin-inline-start:auto}
+.cells{display:flex;gap:3px}
+.cells i{width:22px;height:12px;border-radius:3px;background:var(--line);transition:background .4s}
+.heat-label{font-size:14px;font-weight:500;min-width:52px}
+/* setup */
+.setup{max-width:760px;margin:28px auto 0;display:grid;gap:22px}
+.hero h1{font-size:clamp(38px,7vw,64px);font-weight:900;line-height:1.05}
+.hero h1 span{color:var(--stamp)}
+.hero p{font-family:var(--font-read);font-size:19px;color:var(--ink-2);max-width:60ch;margin:10px 0 0}
+.card{background:var(--sheet);border:1px solid var(--line);border-radius:12px;padding:20px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+.field{display:grid;gap:6px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border-radius:999px;padding:7px 14px;font-size:15px}
+.chip[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);font-weight:500}
+.rules{margin:0;padding-inline-start:20px;display:grid;gap:6px;color:var(--ink-2)}
+.resume{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;border:1.5px dashed var(--accent);background:var(--accent-soft)}
+/* start pick */
+.pick{max-width:900px;margin:24px auto 0;display:grid;gap:18px}
+.clue-hero{font-family:var(--font-read);font-size:24px;line-height:1.4;border-inline-start:4px solid var(--stamp);padding:6px 14px 6px 0;border-radius:0}
+.stations{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.stations button{text-align:start;font-family:var(--font-read);font-size:18px;padding:14px;min-height:64px}
+/* play */
+.play{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:22px;margin-top:18px;align-items:start}
+.side{position:sticky;top:calc(env(safe-area-inset-top,0px) + 76px);display:grid;gap:14px;max-height:calc(100vh - 96px);overflow:auto;padding-bottom:4px}
+.note{background:var(--sheet);border:1px solid var(--line);border-radius:12px;padding:16px;display:grid;gap:10px}
+.note h3{font-size:18px}
+.clues{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.clues li{font-family:var(--font-read);font-size:17px;line-height:1.45;padding:8px 10px;background:var(--paper);border-radius:8px}
+.clues li small{display:block;font-family:var(--font-ui);font-size:12px;color:var(--stamp);font-weight:500}
+.clues li.locked{color:var(--ink-2);font-family:var(--font-ui);font-size:14px;background:transparent;border:1px dashed var(--line)}
+.row{display:flex;gap:8px}
+.row input{flex:1;min-width:0}
+.pieces{display:flex;flex-wrap:wrap;gap:6px}
+.piece{font-size:14px;padding:4px 10px;border-radius:999px;border:1px solid var(--line);background:var(--paper)}
+.piece.done{background:var(--ok-bg);color:var(--ok-fg);border-color:transparent}
+.piece.now{border-color:var(--stamp);color:var(--stamp);font-weight:500}
+.path{font-size:13px;color:var(--ink-2);line-height:1.7}
+.path b{color:var(--ink);font-weight:500}
+.sheet{background:var(--sheet);border:1px solid var(--line);border-radius:12px;padding:22px clamp(16px,4vw,40px) 40px;min-width:0}
+.sheet-head{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:10px;border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:14px}
+.sheet-head h1{font-size:clamp(28px,4vw,40px);font-weight:700}
+.article{font-family:var(--font-read);font-size:18.5px;line-height:1.75;max-width:70ch;overflow-wrap:anywhere}
+.article p{margin:0 0 1em}
+.article h2,.article h3{font-family:var(--font-read);margin:1.4em 0 .5em}
+.article h2{font-size:26px;border-bottom:1px solid var(--line);padding-bottom:4px}
+.article h3{font-size:21px}
+.article a.wl{color:var(--link);text-decoration:underline;text-decoration-color:color-mix(in srgb,var(--link) 35%,transparent);text-underline-offset:3px}
+.article a.wl.warm{background:color-mix(in srgb,var(--warm) 28%,transparent);border-radius:3px;text-decoration-color:var(--warm);box-shadow:0 0 0 2px color-mix(in srgb,var(--warm) 28%,transparent)}
+.warmlist{display:flex;flex-wrap:wrap;gap:6px}
+.warmlist button{font-family:var(--font-read);font-size:15px;padding:4px 10px;border-color:var(--warm)}
+.near{display:block;font-family:var(--font-ui);font-size:12px;color:var(--warm);font-weight:500}
+.article a.wl:hover{text-decoration-color:var(--link);background:var(--accent-soft)}
+.article img{max-width:100%;height:auto}
+.article figure,.article .thumb{margin:0 0 1em;max-width:100%}
+.article figure,.article .thumb,.article .infobox,.article table.infobox{float:none!important}
+.article table{display:block;max-width:100%;overflow-x:auto;border-collapse:collapse;font-family:var(--font-ui);font-size:14px;margin:0 0 1.2em}
+.article td,.article th{border:1px solid var(--line);padding:4px 8px;vertical-align:top}
+.article figcaption,.article .thumbcaption{font-size:14px;color:var(--ink-2);font-family:var(--font-ui)}
+.article ul,.article ol{padding-inline-start:24px}
+.article .mw-gallery-traditional,.article .gallery{display:none}
+.loading{color:var(--ink-2);font-family:var(--font-ui);padding:40px 0}
+.toolbar{display:flex;gap:8px;align-items:center}
+/* modal */
+.shade{position:fixed;inset:0;background:var(--shade);z-index:50;display:flex;align-items:center;justify-content:center;padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.modal{background:var(--sheet);border-radius:14px;max-width:560px;width:100%;padding:24px;display:grid;gap:14px;max-height:90vh;overflow:auto}
+.modal h2{font-size:26px}
+.stamp{display:inline-block;font-family:var(--font-ui);font-size:12px;font-weight:700;letter-spacing:.08em;color:var(--stamp);border:1.5px solid var(--stamp);border-radius:4px;padding:2px 8px;transform:rotate(-3deg)}
+.gate-text{font-family:var(--font-read);font-size:20px;line-height:1.6;background:var(--paper);border-radius:10px;padding:14px}
+.blank{display:inline-block;min-width:80px;border-bottom:2px solid var(--stamp);margin:0 4px}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}
+.opts button{font-family:var(--font-read);font-size:19px}
+.opts button.right{background:var(--ok-bg);color:var(--ok-fg);border-color:transparent}
+.opts button.wrong{background:var(--bad-bg);color:var(--bad-fg);border-color:transparent}
+.toast{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:10px 18px;border-radius:999px;z-index:60;font-size:15px;max-width:90vw}
+/* end */
+.end{max-width:760px;margin:28px auto 0;display:grid;gap:18px}
+.score-big{font-family:var(--font-read);font-size:72px;font-weight:900;line-height:1;color:var(--stamp);font-variant-numeric:tabular-nums}
+table.board{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:15px}
+table.board td,table.board th{padding:8px 6px;border-bottom:1px solid var(--line);text-align:start}
+table.board th{font-weight:500;color:var(--ink-2);font-size:13px}
+.learned{display:grid;gap:10px}
+.learned div{border-inline-start:3px solid var(--found);padding:2px 12px 2px 0;border-radius:0}
+.learned b{font-family:var(--font-read);font-size:19px}
+.learned p{margin:4px 0 0;color:var(--ink-2);font-family:var(--font-read)}
+@media (max-width:860px){
+  .play{grid-template-columns:minmax(0,1fr)}
+  .side{position:static;max-height:none;order:-1}
+  .heat{margin-inline-start:0}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <div class="brand">בדיוק <span>בערך</span></div>
+  <div class="stats" id="stats"></div>
+  <div class="heat" id="heatBox" hidden>
+    <div class="cells" id="cells"><i></i><i></i><i></i><i></i><i></i></div>
+    <div class="heat-label" id="heatLabel">—</div>
+  </div>
+</div></header>
+<main class="wrap" id="app"></main>
+<div id="modalRoot"></div>
+
+<script>
+const API='https://he.wikipedia.org/w/api.php';
+const LS_GAME='bediyuk-baerech.game.v1', LS_BOARD='bediyuk-baerech.board.v1';
+const LEVELS={kids:'ילדים (8–12)',teens:'נוער',adults:'מבוגרים'};
+const DOMAINS={mix:'הכול',geo:'גיאוגרפיה',sci:'מדע',art:'אמנות',music:'מוזיקה',hist:'היסטוריה'};
+const CLUE_AT={kids:[0,1,2,3,4],teens:[0,2,4,6,8],adults:[0,3,6,9,12]};
+const TI={};
+const BAD_CAT=/ערכים|דפים|קצרמר|מיזם|ויקינתונים|תבנית|קואורדינטות|שגיאות|ללא/;
+const HEAT=[{t:'קר',c:'--cold'},{t:'פושר',c:'--mild'},{t:'חם',c:'--warm'},{t:'רותח',c:'--hot'},{t:'הגעת!',c:'--found'}];
+const STOP_SECTIONS=['הערות שוליים','קישורים חיצוניים','לקריאה נוספת','ראו גם','מקורות','ביבליוגרפיה','הערות'];
+const START_POOL=['השמש','הירח','כדור הארץ','מחשב','כדורגל','ברזל','האוקיינוס האטלנטי','חתול הבית','רכבת','שוקולד','אינטרנט','דינוזאורים','גשם','תיאטרון','המשחקים האולימפיים','זהב','קפה','אופניים','מטוס','חלב','נמר','מתמטיקה','חשמל','מלח','ענן','שעון','מגדלור','מדבר','ספינה','לחם','גיטרה','צילום','ספרייה','אש','שחמט','הר האוורסט','דפוס','ים','אגם','חיטה','דולפינים','קרח'];
+
+const PUZZLES=[
+ {id:'egypt',domain:'geo',levels:['kids','teens','adults'],meta:{a:'מצרים',al:['ארץ מצרים','מצריים'],q:'כל הערכים הנסתרים שייכים לארץ אחת. מהי?'},pieces:[
+  {t:'נילוס',al:['נהר הנילוס','הנילוס'],c:['אני עובר דרך כמה מדינות ואף פעם לא עוצר.','לפני שבנו סכר גדול, הייתי עולה על גדותיי כל שנה ומשקה את השדות.','אני נשפך לים התיכון בדלתא רחבה, ונחשב לאחד הנהרות הארוכים בעולם.']},
+  {t:'תעלת סואץ',al:['סואץ'],c:['אני קיצור דרך שחסך לספינות הקפה סביב יבשת שלמה.','נחפרתי במאה ה־19 ואין בי אף סכר.','אני מחברת את הים התיכון לים סוף.']},
+  {t:'קהיר',al:[],c:['חיים בי מיליוני אנשים.','אני בירה, ובשוליי עומדים מבנים בני אלפי שנים.','אני העיר הגדולה בעולם הערבי, ושוכנת על גדות נהר ארוך.']},
+  {t:'הפירמידה הגדולה של גיזה',al:['פירמידת חאופס','הפירמידה של חאופס','פירמידות גיזה','הפירמידה הגדולה','פירמידה'],c:['אני עשוי מאבן, ואני ותיק מאוד.','במשך אלפי שנים הייתי המבנה הגבוה ביותר שבנו בני אדם.','אני היחיד משבעת פלאי תבל העתיקים שעדיין עומד.']}]},
+ {id:'newton',domain:'sci',levels:['kids','teens'],meta:{a:'אייזק ניוטון',al:['ניוטון','אייזיק ניוטון','סר אייזק ניוטון','יצחק ניוטון'],q:'מדען אחד קושר את כל הערכים הנסתרים. מי הוא?'},pieces:[
+  {t:'כבידה',al:['כוח הכבידה','כוח המשיכה','גרביטציה','משיכה'],c:['אני תמיד איתך, גם כשאתה לא שם לב אליי.','בזכותי הירח לא בורח מכדור הארץ.','אני הכוח שגורם לחפצים ליפול למטה.']},
+  {t:'טלסקופ',al:['טלסקופ מחזיר אור','טלסקופים'],c:['אני עוזר לראות דברים רחוקים.','יש לי עדשות או מראות, ואסטרונומים אוהבים אותי.','גלילאו הפנה אותי לשמיים וגילה ירחים של צדק.']},
+  {t:"אוניברסיטת קיימברידג'",al:["קיימברידג'","אוניברסיטת קמברידג'","קמברידג'"],c:['אני מקום שבו לומדים כבר מאות שנים.','אני באנגליה, ויש לי מתחרה ותיקה בשם אוקספורד.','אני אחת האוניברסיטאות העתיקות בעולם, ונהר קם זורם לידי.']},
+  {t:'מנסרה',al:['פריזמה','מנסרה (אופטיקה)'],c:['אני שקופה, ויש לי פינות.','כשאור לבן עובר דרכי, הוא יוצא אחרת.','אני מפרקת אור לבן לצבעי הקשת.']}]},
+ {id:'leonardo',domain:'art',levels:['teens','adults'],meta:{a:"לאונרדו דה וינצ'י",al:['לאונרדו',"דה וינצ'י",'לאונרדו דה וינצי','דה וינצי','לאונרדו דה-וינצ\'י'],q:'אמן אחד קושר את כל הערכים הנסתרים. מיהו?'},pieces:[
+  {t:'מונה ליזה',al:["ג'וקונדה","לה ג'וקונדה",'המונה ליזה'],c:['אני קטנה יותר ממה שרוב האנשים מצפים.','אני תלויה מאחורי זכוכית במוזיאון בפריז, ותמיד יש מולי המון אנשים.','החיוך שלי הוא אחד המפורסמים בעולם.']},
+  {t:'פירנצה',al:['פלורנס'],c:['אני עיר עם כיפה מפורסמת.','משפחת מדיצ\'י שלטה בי ותמכה באמנים.','אני בירת טוסקנה, ונהר הארנו עובר בי.']},
+  {t:'רנסאנס',al:['הרנסאנס','רנסנס','הרנסנס','תקופת הרנסאנס'],c:['אני תקופה, לא מקום.','השם שלי פירושו "לידה מחדש".','באתי אחרי ימי הביניים, כשאירופה חזרה להתעניין ביוון וברומא.']},
+  {t:'מסוק',al:['הליקופטר','מסוקים'],c:['אני כלי, ואנשים חלמו עליי מאות שנים לפני שבנו אותי.','אני יכול לעמוד באוויר במקום אחד.','יש לי להב מסתובב מעל הראש במקום כנפיים.']}]},
+ {id:'mozart',domain:'music',levels:['kids','teens','adults'],meta:{a:'וולפגנג אמדאוס מוצרט',al:['מוצרט','וולפגנג מוצרט','אמדאוס מוצרט','וולפגנג אמדאוס מוצארט','מוצארט'],q:'מלחין אחד קושר את כל הערכים הנסתרים. מי הוא?'},pieces:[
+  {t:'זלצבורג',al:['זאלצבורג'],c:['אני עיר הררית קטנה ויפה.','אני באוסטריה, ויש מעליי מבצר ענק על גבעה.','יש בי פסטיבל מוזיקה מפורסם, ומוכרים אצלי כדורי שוקולד על שם בן העיר.']},
+  {t:'וינה',al:[],c:['אני עיר של ארמונות ובתי קפה.','אני בירה, והדנובה עוברת בי.','אני בירת אוסטריה, עיר הוואלס והמלחינים הגדולים.']},
+  {t:'פסנתר',al:['פסנתרים'],c:['יש לי שחור ולבן.','יש בתוכי פטישים קטנים ומיתרים חבויים.','אני כלי נגינה עם 88 קלידים.']},
+  {t:'אופרה',al:[],c:['אני מופע ארוך.','אצלי שרים במקום לדבר, ויש לי תזמורת.','אני הצגה שכולה מושרת. "חליל הקסם" ו"כרמן" הן דוגמאות.']}]},
+ {id:'rome',domain:'hist',levels:['teens','adults'],meta:{a:'האימפריה הרומית',al:['רומא העתיקה','רומא','האימפריה הרומאית','הרפובליקה הרומית','רומי','הרומאים','האימפריה הרומאית העתיקה'],q:'כל הערכים הנסתרים מובילים לממלכה עתיקה אחת. מהי?'},pieces:[
+  {t:'יוליוס קיסר',al:['גאיוס יוליוס קיסר','קיסר'],c:['שמי הפך לתואר של שליטים.','חציתי נהר אחד ואמרתי שהקובייה הוטלה.','נרצחתי באידוס של מרץ, בידי חברי הסנאט.']},
+  {t:'קולוסאום',al:['הקולוסיאום','קולוסיאום','הקולוסאום'],c:['אני מבנה עגול ושבור בחלקו.','פעם ישבו בי עשרות אלפי צופים.','בי נלחמו גלדיאטורים.']},
+  {t:'לטינית',al:['השפה הלטינית'],c:['כמעט אף אחד כבר לא נולד לתוכי.','רופאים, משפטנים וביולוגים עדיין משתמשים בי.','אני אמא של האיטלקית, הצרפתית והספרדית.']},
+  {t:'הים התיכון',al:['ים התיכון'],c:['אני גדול וכחול.','שלוש יבשות נוגעות בי.','שליטים קראו לי פעם "הים שלנו", ועל חופיי יושבות ישראל ויוון.']}]},
+ {id:'curie',domain:'sci',levels:['adults'],meta:{a:'מארי קירי',al:['מאריה סקלודובסקה-קירי','מרי קירי','קירי','מאריה קירי','מדאם קירי'],q:'מדענית אחת קושרת את כל הערכים הנסתרים. מי היא?'},pieces:[
+  {t:'רדיואקטיביות',al:['קרינה רדיואקטיבית','דעיכה רדיואקטיבית'],c:['אי אפשר לראות אותי, אבל אפשר למדוד אותי.','גרעינים לא יציבים מתפרקים ופולטים אותי.','אני התופעה שבה אטומים מסוימים פולטים קרינה מעצמם.']},
+  {t:'פרס נובל',al:['פרסי נובל'],c:['הוקמתי בכספו של ממציא חומר נפץ.','מעניקים אותי כל שנה בשטוקהולם ובאוסלו.','אני הפרס היוקרתי ביותר במדע, בספרות ובשלום.']},
+  {t:'ורשה',al:['וארשה'],c:['אני עיר שנהרסה כמעט כולה ונבנתה מחדש.','הוויסלה זורמת דרכי.','אני בירת פולין.']},
+  {t:'פולוניום',al:[],c:['אני נדיר מאוד ומסוכן מאוד.','אני יסוד כימי, ושמי לקוח משמה של מדינה.','קראו לי על שם פולין, ומספרי האטומי 84.']}]},
+ {id:'japan',domain:'geo',levels:['kids','teens'],meta:{a:'יפן',al:['ארץ השמש העולה'],q:'כל הערכים הנסתרים שייכים לארץ אחת. מהי?'},pieces:[
+  {t:'טוקיו',al:[],c:['אני עיר ענקית ומוארת.','פעם קראו לי אדו.','אני בירה ואחת הערים הגדולות בעולם, ואירחתי אולימפיאדה ב־2021.']},
+  {t:"הר פוג'י",al:["פוג'י","פוג'יסן","פוג'י-סן",'הר פוגי'],c:['אני גבוה, וראשי מושלג.','אני הר געש, וציירים אוהבים לצייר אותי.','אני ההר הגבוה במדינה של איים, ומטפסים עליי בקיץ.']},
+  {t:'סמוראי',al:['סמוראים'],c:['אני לוחם.','היה לי קוד כבוד נוקשה בשם בושידו.','נשאתי חרב קטאנה ושירתתי אדון פיאודלי.']},
+  {t:'קיוטו',al:[],c:['אני עיר עם אלפי מקדשים.','הייתי בירה במשך יותר מאלף שנה.','אצלי אפשר לראות גיישות ושערי טורי כתומים.']}]}
+];
+
+let S=null, busy=false, timerId=null, setupSel={level:'teens',domain:'mix',n:3};
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const base=t=>String(t).replace(/\s*\(.*?\)\s*/g,' ').trim();
+function norm(s){return String(s||'').replace(/[\u0591-\u05C7]/g,'').replace(/["'״׳`’‘]/g,'').replace(/[-–—_]/g,' ').replace(/\(.*?\)/g,'').replace(/\s+/g,' ').trim().toLowerCase()}
+function normSet(list){const out=new Set();list.filter(Boolean).forEach(x=>{const n=norm(x);out.add(n);if(n.startsWith('ה')&&n.length>2)out.add(n.slice(1));out.add('ה'+n)});return out}
+function fmtTime(ms){const s=Math.floor(ms/1000),h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=s%60;return (h?h+':'+String(m).padStart(2,'0'):m)+':'+String(x).padStart(2,'0')}
+function save(){try{if(S)localStorage.setItem(LS_GAME,JSON.stringify(S))}catch(e){}}
+function loadSaved(){try{return JSON.parse(localStorage.getItem(LS_GAME)||'null')}catch(e){return null}}
+function clearSaved(){try{localStorage.removeItem(LS_GAME)}catch(e){}}
+function board(){try{return JSON.parse(localStorage.getItem(LS_BOARD)||'[]')}catch(e){return[]}}
+function toast(msg){const d=document.createElement('div');d.className='toast';d.textContent=msg;document.body.appendChild(d);setTimeout(()=>d.remove(),2800)}
+
+let useJsonp=false,lastErr='',jp=0;
+function jsonp(params){
+  return new Promise((res,rej)=>{
+    const cb='__wcb'+(++jp),u=new URL(API),sc=document.createElement('script');
+    Object.entries({...params,format:'json',formatversion:2,callback:cb}).forEach(([k,v])=>u.searchParams.set(k,v));
+    const done=()=>{delete window[cb];sc.remove()};
+    const t=setTimeout(()=>{done();rej(new Error('timeout'))},15000);
+    window[cb]=d=>{clearTimeout(t);done();res(d)};
+    sc.onerror=()=>{clearTimeout(t);done();rej(new Error('script blocked'))};
+    sc.src=u.toString();document.head.appendChild(sc);
+  });
+}
+async function api(params){
+  if(!useJsonp){
+    try{
+      const u=new URL(API);
+      Object.entries({...params,format:'json',formatversion:2,origin:'*'}).forEach(([k,v])=>u.searchParams.set(k,v));
+      const r=await fetch(u);if(!r.ok)throw new Error('http '+r.status);return await r.json();
+    }catch(e){lastErr='fetch: '+e.message;useJsonp=true}
+  }
+  try{return await jsonp(params)}catch(e){lastErr+=' | jsonp: '+e.message;throw e}
+}
+async function resolveTitle(cands){
+  const r=await api({action:'query',titles:cands.slice(0,40).join('|'),redirects:1,prop:'pageprops',ppprop:'disambiguation'});
+  const q=r.query||{},pages=(q.pages||[]).filter(p=>!p.missing&&!p.invalid&&!(p.pageprops&&'disambiguation' in p.pageprops));
+  if(!pages.length)return null;
+  const map={};(q.normalized||[]).forEach(x=>map[x.from]=x.to);(q.redirects||[]).forEach(x=>map[x.from]=x.to);
+  for(const c of cands){let x=c;for(let k=0;k<4&&map[x];k++)x=map[x];const pg=pages.find(p=>p.title===x);if(pg)return pg.title}
+  return pages[0].title;
+}
+
+async function targetInfo(T){
+  if(TI[T])return TI[T];
+  const info={out:new Set(),cat:''};
+  try{
+    let cont={};
+    for(let k=0;k<4;k++){
+      const r=await api({action:'query',titles:T,prop:'links',plnamespace:0,pllimit:'max',...cont});
+      ((r.query&&r.query.pages||[])[0]||{}).links?.forEach(l=>info.out.add(l.title));
+      if(!r.continue)break;cont=r.continue;
+    }
+    const c=await api({action:'query',titles:T,prop:'categories',clshow:'!hidden',cllimit:'max'});
+    const cats=(((c.query&&c.query.pages||[])[0]||{}).categories||[]).map(x=>x.title.replace(/^קטגוריה:/,'')).filter(x=>!BAD_CAT.test(x));
+    const b=base(T);info.cat=cats.find(x=>!x.includes(b))||'';
+  }catch(e){}
+  TI[T]=info;return info;
+}
+async function findWarmLinks(T){
+  const art=$('#article');if(!art)return[];
+  const info=await targetInfo(T);
+  const titles=[...new Set([...art.querySelectorAll('a.wl')].map(a=>a.dataset.wt))].slice(0,150);
+  const warm=new Set();
+  for(let i=0;i<titles.length;i+=50){
+    const batch=titles.slice(i,i+50);
+    try{
+      const r=await api({action:'query',titles:batch.join('|'),redirects:1,prop:'links',pltitles:T});
+      const q=r.query||{},map={};(q.normalized||[]).forEach(x=>map[x.from]=x.to);(q.redirects||[]).forEach(x=>map[x.from]=x.to);
+      const linking=new Set((q.pages||[]).filter(pg=>pg.links&&pg.links.length).map(pg=>pg.title));
+      batch.forEach(t=>{let c=t;for(let k=0;k<3&&map[c];k++)c=map[c];if(c===T||linking.has(c)||info.out.has(c))warm.add(t)});
+    }catch(e){}
+  }
+  return [...warm];
+}
+async function runCompass(paid){
+  const p=piece(),A=S.article;if(!p)return;
+  const box=$('#compassOut');if(box)box.innerHTML='<span class="label">המצפן מחפש…</span>';
+  const warm=await findWarmLinks(p.title);
+  if(S.article!==A||piece()!==p)return;
+  if(paid)S.compass=(S.compass||0)+1;
+  p.compassAt=A;p.warm=warm;save();
+  markWarm();renderSide();
+}
+function markWarm(){
+  const p=piece(),art=$('#article');if(!art||!p)return;
+  const w=new Set(p.compassAt===S.article?(p.warm||[]):[]);
+  art.querySelectorAll('a.wl').forEach(a=>a.classList.toggle('warm',w.has(a.dataset.wt)));
+}
+
+/* ---------- article cleaning ---------- */
+function cleanArticle(html){
+  const doc=new DOMParser().parseFromString(html,'text/html');
+  const root=doc.querySelector('.mw-parser-output')||doc.body;
+  root.querySelectorAll('style,script,link,meta,.mw-editsection,sup.reference,.reference,.mw-references-wrap,ol.references,.navbox,.navbox-styles,.metadata,.ambox,.noprint,.mw-empty-elt,.hatnote,.dablink,.sistersitebox,.toc,#toc,.catlinks,.mw-authority-control,.gallery').forEach(e=>e.remove());
+  let cutting=false;
+  [...root.children].forEach(el=>{
+    const h=el.matches('h2')?el:(el.matches('.mw-heading2')?el.querySelector('h2'):null);
+    if(h){const t=h.textContent.trim();cutting=STOP_SECTIONS.some(s=>t.startsWith(s))}
+    if(cutting)el.remove();
+  });
+  root.querySelectorAll('img').forEach(img=>{['src','srcset'].forEach(a=>{const v=img.getAttribute(a);if(v)img.setAttribute(a,v.replace(/(^|,\s*)\/\//g,'$1https://'))});img.setAttribute('loading','lazy');img.removeAttribute('height')});
+  root.querySelectorAll('a').forEach(a=>{
+    const href=a.getAttribute('href')||'';let t=null;
+    const m=href.match(/^(?:\/wiki\/|\.\/)([^#?]+)/);
+    if(m&&!a.classList.contains('new')&&!a.querySelector('img')){try{t=decodeURIComponent(m[1]).replace(/_/g,' ')}catch(e){t=null}if(t&&t.includes(':'))t=null}
+    if(t){a.setAttribute('data-wt',t);a.setAttribute('href','#');a.className='wl';[...a.attributes].forEach(at=>{if(!['data-wt','href','class'].includes(at.name))a.removeAttribute(at.name)})}
+    else{const sp=doc.createElement('span');sp.innerHTML=a.innerHTML;a.replaceWith(sp)}
+  });
+  return root.innerHTML;
+}
+
+/* ---------- puzzle setup ---------- */
+function candidatePuzzles(level,domain){return PUZZLES.filter(p=>p.levels.includes(level)&&(domain==='mix'||p.domain===domain))}
+async function newGame(name){
+  let list=candidatePuzzles(setupSel.level,setupSel.domain);
+  let played=[];try{played=JSON.parse(localStorage.getItem('bediyuk-baerech.played')||'[]')}catch(e){}
+  const fresh=list.filter(p=>!played.includes(p.id));if(fresh.length)list=fresh;
+  const P=list[Math.floor(Math.random()*list.length)];
+  try{played=[...played.filter(x=>x!==P.id),P.id].slice(-20);localStorage.setItem('bediyuk-baerech.played',JSON.stringify(played))}catch(e){}
+  $('#app').innerHTML='<div class="loading">מכין את החידה ובודק את הערכים בוויקיפדיה…</div>';
+  const chosen=P.pieces.slice(0,setupSel.n);const pieces=[];
+  for(const pc of chosen){
+    let title=null;try{title=await resolveTitle([pc.t,...pc.al])}catch(e){lastErr=lastErr||e.message}
+    if(!title&&!lastErr)lastErr='title not found: '+pc.t;
+    if(title)pieces.push({t:pc.t,al:pc.al,c:pc.c,title,solved:false,stations:0,shown:1,bought:0,wrong:0,extract:''});
+  }
+  if(pieces.length<2){$('#app').innerHTML='<div class="setup"><div class="card"><h2>לא הצלחתי להתחבר לוויקיפדיה</h2><p>בדוק את החיבור לאינטרנט ונסה שוב. אם פתחת את הקובץ מתוך תצוגה מקדימה, הורד אותו ופתח אותו בדפדפן.</p><p class="label" dir="ltr" style="text-align:left">'+esc(lastErr||'no error captured')+'</p><button class="primary" onclick="renderSetup()">חזרה</button></div></div>';return}
+  S={v:1,name,level:setupSel.level,domain:setupSel.domain,puzzleId:P.id,pieces,cur:0,phase:'start',article:null,history:[],stations:0,moves:0,gatesOk:0,gatesBad:0,timeMs:0,heat:0,metaWrong:0,metaHints:0,metaSolved:false,gaveUp:false,startPick:null};
+  save();renderStart();
+}
+const puzzle=()=>PUZZLES.find(p=>p.id===S.puzzleId);
+const piece=()=>S.pieces[S.cur];
+
+/* ---------- header ---------- */
+function renderStats(){
+  const st=$('#stats'),hb=$('#heatBox');
+  if(!S||S.phase==='done'){st.innerHTML='';hb.hidden=true;return}
+  st.innerHTML=`<span>${esc(S.name)}</span><span>חלק <b>${Math.min(S.cur+1,S.pieces.length)}/${S.pieces.length}</b></span><span>תחנות <b>${S.stations}</b></span><span>זמן <b id="clock">${fmtTime(S.timeMs)}</b></span>`;
+  hb.hidden=S.phase!=='play';
+  if(S.phase==='play')setHeat(S.heat,true);
+}
+function setHeat(h,silent){
+  S.heat=h;const cells=[...document.querySelectorAll('#cells i')];
+  cells.forEach((c,i)=>c.style.background=i<=h&&h>=0?`var(${HEAT[Math.max(0,h)].c})`:'var(--line)');
+  const l=$('#heatLabel');if(h<0){l.textContent='מודד…';l.style.color='var(--ink-2)'}else{l.textContent=HEAT[h].t;l.style.color=`var(${HEAT[h].c})`}
+}
+function startTimer(){
+  clearInterval(timerId);
+  timerId=setInterval(()=>{if(!S||document.hidden||!['play','meta','start'].includes(S.phase))return;S.timeMs+=1000;const c=$('#clock');if(c)c.textContent=fmtTime(S.timeMs);if(S.timeMs%5000===0)save()},1000);
+}
+
+/* ---------- setup screen ---------- */
+function renderSetup(){
+  const saved=loadSaved();S=null;renderStats();
+  const lb=board().slice(0,5);
+  $('#app').innerHTML=`<div class="setup">
+  <div class="hero"><h1>בדיוק <span>בערך</span></h1><p>יעד סודי מסתתר בוויקיפדיה. אתם לא יודעים מה הוא. קוראים, אוספים רמזים, מרגישים מתי מתחממים, ומנחשים. כמה חלקים יחד יוצרים חידה אחת גדולה.</p></div>
+  ${saved&&saved.phase!=='done'?`<div class="card resume"><div><div class="label">משחק שמור</div><b>${esc(saved.name)}</b> · חלק ${Math.min(saved.cur+1,saved.pieces.length)} מתוך ${saved.pieces.length} · ${saved.stations} תחנות</div><div class="row"><button class="primary" id="resumeBtn">להמשיך</button><button class="ghost" id="dropBtn">למחוק</button></div></div>`:''}
+  <div class="card" style="display:grid;gap:18px">
+    <div class="field"><label class="label" for="nameIn">שם השחקן</label><input id="nameIn" maxlength="24" placeholder="בועז" value="${esc((saved&&saved.name)||'')}"><div class="err" id="nameErr"></div></div>
+    <div class="field"><span class="label">גיל</span><div class="chips" id="lvlChips">${Object.entries(LEVELS).map(([k,v])=>`<button class="chip" data-k="${k}" aria-pressed="${setupSel.level===k}">${v}</button>`).join('')}</div></div>
+    <div class="field"><span class="label">תחום</span><div class="chips" id="domChips">${Object.entries(DOMAINS).map(([k,v])=>`<button class="chip" data-k="${k}" aria-pressed="${setupSel.domain===k}">${v}</button>`).join('')}</div></div>
+    <div class="field"><span class="label">כמה ערכים נסתרים בחידה</span><div class="chips" id="nChips">${[2,3,4].map(n=>`<button class="chip" data-k="${n}" aria-pressed="${setupSel.n===n}">${n}</button>`).join('')}</div></div>
+    <div class="err" id="setupErr"></div>
+    <div><button class="primary" id="goBtn">להתחיל חידה חדשה</button></div>
+  </div>
+  <div class="card"><h3 style="margin-bottom:8px">איך משחקים</h3><ol class="rules">
+    <li>מקבלים רמז ראשון לערך נסתר, ובוחרים תחנת זינוק מתוך רשימה.</li>
+    <li>קוראים את הערך ובוחרים קישור כדי להמשיך. לפני היציאה מגיע "שער": משפט מהפסקה עם מילה חסרה. טעות עולה תחנה.</li>
+    <li>מד החום מראה עד כמה הערך הנוכחי קרוב ליעד. כמעט בכל תחנה נחשף רמז נוסף, עד חמישה רמזים.</li>
+    <li>נתקעתם? המצפן מסמן בדף את הקישורים שמובילים לכיוון היעד. אצל ילדים הוא פועל לבד.</li>
+    <li>חושבים שהבנתם? מנחשים. אחרי שכל הערכים הנסתרים נחשפו, פותרים את החידה הגדולה שמחברת ביניהם.</li>
+    <li>מעט תחנות, מעט רמזים קנויים ושערים נכונים מביאים ניקוד גבוה. ההתקדמות נשמרת, ואפשר להמשיך מתי שרוצים.</li>
+  </ol></div>
+  ${lb.length?`<div class="card"><h3 style="margin-bottom:8px">הטובים ביותר במכשיר הזה</h3>${boardTable(lb)}</div>`:''}
+  </div>`;
+  const bindChips=(id,key,num)=>$(id).addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b)return;setupSel[key]=num?+b.dataset.k:b.dataset.k;$(id).querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed',c===b));$('#setupErr').textContent=''});
+  bindChips('#lvlChips','level');bindChips('#domChips','domain');bindChips('#nChips','n',true);
+  $('#nameIn').addEventListener('input',()=>$('#nameErr').textContent='');
+  $('#goBtn').onclick=()=>{
+    const name=$('#nameIn').value.trim();
+    if(!name){$('#nameErr').textContent='כתוב שם כדי להתחיל';$('#nameIn').focus();return}
+    if(!candidatePuzzles(setupSel.level,setupSel.domain).length){$('#setupErr').textContent='עדיין אין חידה בתחום הזה לגיל הזה. בחר תחום אחר או "הכול".';return}
+    newGame(name);
+  };
+  if(saved&&saved.phase!=='done'){
+    $('#resumeBtn').onclick=()=>{S=saved;resume()};
+    $('#dropBtn').onclick=()=>{clearSaved();renderSetup()};
+  }
+}
+function boardTable(rows){
+  return `<div style="overflow-x:auto"><table class="board"><thead><tr><th>#</th><th>שחקן</th><th>חידה</th><th>ניקוד</th><th>תחנות</th><th>זמן</th></tr></thead><tbody>${rows.map((r,i)=>`<tr><td>${i+1}</td><td>${esc(r.name)}</td><td>${esc(r.answer)}</td><td><b>${r.score}</b></td><td>${r.stations}</td><td>${fmtTime(r.time)}</td></tr>`).join('')}</tbody></table></div>`;
+}
+function resume(){
+  startTimer();
+  if(S.phase==='start')renderStart();
+  else if(S.phase==='play'){renderPlayShell();loadArticle(S.article,{count:false,noHistory:true})}
+  else if(S.phase==='meta')renderMeta();
+  else renderSetup();
+}
+
+/* ---------- start pick ---------- */
+function renderStart(){
+  S.phase='start';startTimer();renderStats();
+  const p=piece(),targets=new Set(S.pieces.map(x=>norm(x.title)));
+  if(!S.startPick){
+    $('#app').innerHTML='<div class="loading">מכין תחנות זינוק…</div>';
+    targetInfo(p.title).then(info=>{
+      const near=shuffle([...info.out].filter(t=>/^[\u05D0-\u05EA]/.test(t)&&t.length<=24&&!/\d/.test(t)&&!targets.has(norm(t)))).slice(0,S.level==='adults'?2:3);
+      S.nearPick=near;
+      S.startPick=shuffle([...near,...shuffle(START_POOL.filter(t=>!targets.has(norm(t))&&!near.includes(t))).slice(0,12-near.length)]);
+      renderStart();
+    });
+    return;
+  }
+  save();
+  $('#app').innerHTML=`<div class="pick">
+    <div><span class="stamp">ערך נסתר ${S.cur+1} מתוך ${S.pieces.length}</span></div>
+    <div class="clue-hero">${esc(p.c[0])}</div>
+    <p style="margin:0;color:var(--ink-2)">${S.cur===0?'מאיפה תתחיל? בחר תחנת זינוק. תחנה שנראית קשורה לרמז יכולה לחסוך דרך.':'אפשר להמשיך מהערך שבו עצרת, או לקפוץ לתחנה חדשה.'}</p>
+    ${S.cur>0&&S.article?`<div><button class="primary" id="contBtn">להמשיך מ"${esc(S.article)}"</button></div>`:''}
+    <div class="stations" id="stList">${S.startPick.map(t=>`<button data-t="${esc(t)}">${esc(t)}${S.level!=='adults'&&(S.nearPick||[]).includes(t)?'<span class="near">קרוב ליעד</span>':''}</button>`).join('')}</div>
+    <div><button class="ghost" id="reshuf">ערבב תחנות</button></div>
+  </div>`;
+  $('#stList').onclick=e=>{const b=e.target.closest('button');if(!b)return;beginAt(b.dataset.t,b)};
+  $('#reshuf').onclick=()=>{S.startPick=null;renderStart()};
+  const cb=$('#contBtn');if(cb)cb.onclick=()=>beginAt(S.article,null);
+}
+async function beginAt(title,btn){
+  if(busy)return;
+  S.phase='play';S.history=[];renderPlayShell();
+  const ok=await loadArticle(title,{count:false});
+  if(!ok){S.phase='start';if(btn)S.startPick=S.startPick.filter(t=>t!==title);renderStart();toast('הערך הזה לא נפתח. בחר תחנה אחרת.')}
+  else{S.startPick=null;save()}
+}
+
+/* ---------- play ---------- */
+function renderPlayShell(){
+  renderStats();
+  $('#app').innerHTML=`<div class="play">
+    <article class="sheet">
+      <div class="sheet-head"><h1 id="artTitle">…</h1><div class="toolbar"><button class="ghost" id="backBtn" title="חזרה לערך הקודם (נחשב תחנה)">חזרה</button></div></div>
+      <div class="article" id="article"><div class="loading">טוען…</div></div>
+    </article>
+    <aside class="side" id="side"></aside>
+  </div>`;
+  $('#article').addEventListener('click',e=>{const a=e.target.closest('a.wl');if(!a)return;e.preventDefault();onLink(a)});
+  $('#backBtn').onclick=()=>{if(S.history.length<2||busy)return;const prev=S.history[S.history.length-2];S.history.pop();loadArticle(prev,{count:true,noHistory:true})};
+  renderSide();
+}
+function nextClueIn(p){const sched=CLUE_AT[S.level];if(p.shown>=clueCount(p))return null;return Math.max(0,sched[p.shown]-p.stations)}
+function letterHint(p){const b=base(p.title);const words=b.split(/\s+/).length;return `מתחיל באות "${b[0]}", ${b.replace(/[\s'"׳״-]/g,'').length} אותיות${words>1?`, ${words} מילים`:''}.`}
+function clueCount(p){return (TI[p.title]&&TI[p.title].cat)?5:4}
+function clueText(p,i){if(i<3)return p.c[i];const cat=TI[p.title]&&TI[p.title].cat;if(i===3&&cat)return `בוויקיפדיה היעד שייך לנושא: "${cat}".`;return letterHint(p)}
+function updateClues(p){const n=CLUE_AT[S.level].filter(x=>p.stations>=x).length;const mx=clueCount(p);if(n>p.shown&&p.shown<mx){p.shown=Math.min(mx,n);toast('רמז חדש נחשף')}}
+function compassHtml(p){
+  const here=p.compassAt===S.article,auto=S.level==='kids';
+  let h='';
+  if(here){
+    h+=(p.warm&&p.warm.length)?`<div class="label">קישורים בדף הזה שמובילים לכיוון היעד (מסומנים בכתום). לחיצה מקפיצה אל הקישור בטקסט, כדי לקרוא את ההקשר:</div><div class="warmlist" id="warmList">${p.warm.slice(0,8).map(t=>`<button data-t="${esc(t)}">${esc(t)}</button>`).join('')}</div>`
+      :`<div class="label">אין בדף הזה קישור שמוביל ישר לכיוון היעד. כדאי לחזור אחורה, או לבחור קישור כללי יותר (מדינה, תקופה, תחום).</div>`;
+  }else h+=auto?`<div id="compassOut"><span class="label">המצפן מחפש…</span></div>`:`<div id="compassOut" class="label">המצפן מסמן בדף את הקישורים שקרובים ליעד.</div><div><button class="ghost" id="compassBtn">להפעיל מצפן (3- נקודות)</button></div>`;
+  if((S.coldStreak||0)>=3)h+=`<div class="label" style="color:var(--cold)">כבר ${S.coldStreak} תחנות שקר. נסו לחזור אחורה או להיעזר במצפן.</div>`;
+  return h;
+}
+function renderSide(){
+  const p=piece(),side=$('#side');if(!side||!p)return;
+  const nx=nextClueIn(p);
+  const items=[];for(let i=0;i<p.shown;i++)items.push(`<li><small>רמז ${i+1}</small>${esc(clueText(p,i))}</li>`);
+  if(p.shown<clueCount(p))items.push(`<li class="locked">הרמז הבא ייחשף בעוד ${nx} ${nx===1?'תחנה':'תחנות'}</li>`);
+  const path=S.history.slice(-8);
+  side.innerHTML=`
+   <div class="note"><h3>היעד הנסתר ${S.cur+1}</h3><ul class="clues">${items.join('')}</ul>
+     ${p.shown<clueCount(p)?`<button class="ghost" id="buyBtn">לחשוף רמז עכשיו (3- נקודות)</button>`:''}</div>
+   <div class="note"><h3>מצפן</h3>${compassHtml(p)}</div>
+   <div class="note"><label class="label" for="guessIn">חושב שהבנת?</label>
+     <div class="row"><input id="guessIn" placeholder="שם הערך הנסתר" autocomplete="off"><button class="primary" id="guessBtn">לנחש</button></div>
+     <div class="err" id="guessErr"></div><div class="label">ניחוש שגוי עולה 2 תחנות.</div></div>
+   <div class="note"><div class="label">חלקי החידה</div><div class="pieces">${S.pieces.map((x,i)=>`<span class="piece ${x.solved?'done':i===S.cur?'now':''}">${x.solved?esc(base(x.title)):i===S.cur?'מחפש…':'?'}</span>`).join('')}</div>
+     ${path.length?`<div class="label">המסלול שלך</div><div class="path">${S.history.length>8?'… ← ':''}${path.map((t,i)=>i===path.length-1?`<b>${esc(t)}</b>`:esc(t)).join(' ← ')}</div>`:''}
+     <div><button class="ghost" id="homeBtn">שמור וצא</button></div></div>`;
+  const bb=$('#buyBtn');if(bb)bb.onclick=()=>{p.shown++;p.bought++;save();renderSide()};
+  const cbn=$('#compassBtn');if(cbn)cbn.onclick=()=>runCompass(true);
+  const wl=$('#warmList');if(wl)wl.onclick=e=>{const b=e.target.closest('button');if(!b)return;const a=[...document.querySelectorAll('#article a.wl')].find(x=>x.dataset.wt===b.dataset.t);if(a){a.scrollIntoView({block:'center',behavior:'smooth'});a.focus()}};
+  const gi=$('#guessIn');gi.addEventListener('input',()=>$('#guessErr').textContent='');
+  gi.addEventListener('keydown',e=>{if(e.key==='Enter')guess()});
+  $('#guessBtn').onclick=guess;
+  $('#homeBtn').onclick=()=>{save();renderSetup()};
+}
+function guess(){
+  const p=piece(),v=$('#guessIn').value.trim();
+  if(!v){$('#guessErr').textContent='כתוב ניחוש קודם';return}
+  const ok=normSet([p.title,base(p.title),p.t,...p.al]);
+  if(ok.has(norm(v))){solvePiece(false)}
+  else{p.wrong++;p.stations+=2;S.stations+=2;updateClues(p);save();renderStats();renderSide();$('#guessErr').textContent='לא זה. המשיכו לחפש.'}
+}
+async function loadArticle(title,{count=true,noHistory=false}={}){
+  busy=true;const art=$('#article');if(art)art.style.opacity='.45';
+  let d;
+  try{d=await api({action:'parse',page:title,prop:'text',redirects:1,disableeditsection:1,disabletoc:1});if(d.error)throw new Error(d.error.info)}
+  catch(e){busy=false;if(art)art.style.opacity='1';toast('לא הצלחתי לפתוח את הערך. נסו קישור אחר.');return false}
+  const real=d.parse.title,p=piece();
+  if(count){S.stations++;p.stations++}
+  S.article=real;if(!noHistory){S.history.push(real);if(S.history.length>80)S.history=S.history.slice(-80)}
+  else if(!S.history.length||S.history[S.history.length-1]!==real)S.history.push(real);
+  $('#artTitle').textContent=real;
+  art.innerHTML=cleanArticle(d.parse.text);art.style.opacity='1';
+  window.scrollTo({top:0});
+  busy=false;
+  updateClues(p);renderStats();renderSide();save();
+  targetInfo(p.title).then(()=>{if(piece()===p&&S.phase==='play')renderSide()});
+  measureHeat(real,art.textContent);
+  markWarm();
+  if(S.level==='kids'&&p.compassAt!==real)runCompass(false);
+  return true;
+}
+async function measureHeat(A,text){
+  const p=piece();if(!p)return;const T=p.title;
+  if(A===T){setHeat(4);save();setTimeout(()=>solvePiece(true),500);return}
+  setHeat(-1);
+  try{
+    const r=await api({action:'query',titles:A+'|'+T,prop:'links|categories',pltitles:A+'|'+T,pllimit:'max',clshow:'!hidden',cllimit:'max'});
+    if(S.article!==A||piece()!==p)return;
+    const pages=(r.query&&r.query.pages)||[],pA=pages.find(x=>x.title===A)||{},pT=pages.find(x=>x.title===T)||{};
+    const at=(pA.links||[]).some(l=>l.title===T),ta=(pT.links||[]).some(l=>l.title===A);
+    const tc=new Set((pT.categories||[]).map(c=>c.title)),shared=(pA.categories||[]).some(c=>tc.has(c.title));
+    const mention=base(T).length>2&&text.includes(base(T));
+    let h=0;if(at&&ta)h=3;else if(at||ta||mention)h=2;else if(shared)h=1;
+    setHeat(h);S.coldStreak=h===0?(S.coldStreak||0)+1:0;save();renderSide();
+  }catch(e){setHeat(0)}
+}
+
+/* ---------- gate ---------- */
+const STOPW=new Set(['אשר','היה','הייתה','היו','שהיה','שהייתה','גם','כאשר','בין','אחד','אחת','לאחר','לפני','מאוד','אולם','אך','כמו','עם','על','אל','את','של','כי','לא','זה','זו','הוא','היא','הם','הן','כל','עוד','בשנת','שנת','ובו','בה','בו','יותר','ביותר','כדי','במהלך','עד','אף','רק']);
+const cleanTok=t=>t.replace(/^[\(\[«"'״׳,;:.\-–]+|[\)\]»"'״׳,;:.!?\-–]+$/g,'');
+const isWord=w=>/^[\u05D0-\u05EA][\u05D0-\u05EA'״׳"-]{2,}$/.test(w)||/^\d{2,4}$/.test(w);
+function buildGate(a){
+  const block=a.closest('p,li,dd');if(!block)return null;
+  const linkText=a.textContent.trim();
+  const text=block.textContent.replace(/\[\d+\]/g,'').replace(/\s+/g,' ').trim();
+  const sents=text.split(/(?<=[.!?])\s+/);
+  let sent=sents.find(s=>s.includes(linkText))||(text.length<240?text:null);
+  if(!sent||sent.split(' ').length<6)return null;
+  const linkWords=new Set(linkText.split(/\s+/).map(cleanTok));
+  const toks=sent.split(' ');
+  const cand=toks.map((t,i)=>({i,w:cleanTok(t)})).filter(x=>isWord(x.w)&&!linkWords.has(x.w)&&!STOPW.has(x.w));
+  if(!cand.length)return null;
+  let pick;
+  if(S.level==='kids'){const nums=cand.filter(x=>/^\d/.test(x.w));const mid=cand.filter(x=>x.w.length>=3&&x.w.length<=6);pick=(nums.length?nums:mid.length?mid:cand)[Math.floor(Math.random()*(nums.length?nums.length:mid.length?mid.length:cand.length))]}
+  else if(S.level==='adults'){pick=cand.slice().sort((x,y)=>y.w.length-x.w.length)[0]}
+  else pick=cand[Math.floor(Math.random()*cand.length)];
+  const ans=pick.w,isNum=/^\d/.test(ans),nOpt=S.level==='kids'?2:3;
+  const pool=($('#article').textContent.match(isNum?/\b\d{2,4}\b/g:/[\u05D0-\u05EA][\u05D0-\u05EA'״׳"-]{2,}/g)||[]).map(cleanTok).filter(w=>w&&w!==ans&&!STOPW.has(w)&&!sent.includes(w));
+  let opts=[...new Set(pool.filter(w=>Math.abs(w.length-ans.length)<=2))];
+  opts=shuffle(opts).slice(0,nOpt);
+  if(isNum)while(opts.length<nOpt){const n=String(+ans+(Math.floor(Math.random()*40)-20));if(n!==ans&&!opts.includes(n)&&+n>0)opts.push(n)}
+  if(opts.length<nOpt)return null;
+  const shown=toks.map((t,i)=>i===pick.i?t.replace(ans,'\u0000'):t).join(' ');
+  const html=esc(shown).replace('\u0000','<span class="blank" aria-label="מילה חסרה"></span>');
+  return {html,ans,opts:shuffle([ans,...opts])};
+}
+function onLink(a){
+  if(busy)return;const t=a.dataset.wt;if(!t)return;
+  S.moves++;
+  const need=S.level==='kids'?S.moves%2===0:true;
+  const g=need?buildGate(a):null;
+  if(!g){loadArticle(t);return}
+  const m=document.createElement('div');m.className='shade';
+  m.innerHTML=`<div class="modal" role="dialog" aria-modal="true" aria-labelledby="gH"><span class="stamp">שער</span><h2 id="gH">לפני שיוצאים אל "${esc(t)}"</h2><p style="margin:0;color:var(--ink-2)">איזו מילה חסרה במשפט מהערך?</p><div class="gate-text">${g.html}</div><div class="opts">${g.opts.map(o=>`<button data-o="${esc(o)}">${esc(o)}</button>`).join('')}</div><div class="err" id="gateMsg" style="color:var(--ink-2)"></div><div><button class="ghost" id="gCancel">להישאר כאן</button></div></div>`;
+  $('#modalRoot').appendChild(m);m.querySelector('.opts button').focus();
+  $('#gCancel').onclick=()=>{S.moves--;m.remove()};
+  m.querySelector('.opts').onclick=e=>{
+    const b=e.target.closest('button');if(!b||m.dataset.done)return;m.dataset.done=1;
+    const right=b.dataset.o===g.ans;
+    m.querySelectorAll('.opts button').forEach(x=>{if(x.dataset.o===g.ans)x.classList.add('right')});
+    if(right){S.gatesOk++;$('#gateMsg').textContent='נכון. יוצאים לדרך.'}
+    else{b.classList.add('wrong');S.gatesBad++;S.stations++;piece().stations++;$('#gateMsg').textContent='לא מדויק. זה עלה תחנה אחת.'}
+    setTimeout(()=>{m.remove();loadArticle(t)},right?700:1600);
+  };
+}
+
+/* ---------- solving ---------- */
+async function solvePiece(arrived){
+  const p=piece();if(p.solved)return;p.solved=true;save();
+  let ex='';try{const r=await api({action:'query',prop:'extracts',exintro:1,explaintext:1,exsentences:2,titles:p.title});ex=((r.query&&r.query.pages||[])[0]||{}).extract||''}catch(e){}
+  p.extract=ex;save();
+  const last=S.cur===S.pieces.length-1;
+  const m=document.createElement('div');m.className='shade';
+  m.innerHTML=`<div class="modal" role="dialog" aria-modal="true" aria-labelledby="sH"><span class="stamp">${arrived?'הגעת אל היעד':'ניחוש נכון'}</span><h2 id="sH">${esc(base(p.title))}</h2>${ex?`<p style="margin:0;font-family:var(--font-read);font-size:18px;color:var(--ink-2)">${esc(ex)}</p>`:''}<p class="label" style="margin:0">${p.stations} תחנות בחלק הזה</p><div><button class="primary" id="nextBtn">${last?'לחידה הגדולה':'לערך הנסתר הבא'}</button></div></div>`;
+  $('#modalRoot').appendChild(m);$('#nextBtn').focus();
+  $('#nextBtn').onclick=()=>{m.remove();if(last){S.phase='meta';save();renderMeta()}else{S.cur++;S.heat=0;S.startPick=null;save();renderStart()}};
+}
+function renderMeta(){
+  S.phase='meta';renderStats();startTimer();
+  const P=puzzle(),ans=base(P.meta.a);
+  const letters=[...ans].map((ch,i)=>ch===' '?'&nbsp;&nbsp;':(i<S.metaHints?esc(ch):'_')).join(' ');
+  $('#app').innerHTML=`<div class="pick">
+    <div><span class="stamp">החידה הגדולה</span></div>
+    <div class="clue-hero">${esc(P.meta.q)}</div>
+    <div class="pieces">${S.pieces.map(x=>`<span class="piece done" style="font-size:17px;padding:6px 14px">${esc(base(x.title))}</span>`).join('')}</div>
+    <div class="card" style="display:grid;gap:10px;max-width:560px">
+      <div class="label">התשובה</div><div style="font-family:var(--font-read);font-size:24px;letter-spacing:.06em" dir="rtl">${letters}</div>
+      <div class="row"><input id="metaIn" placeholder="הפתרון" autocomplete="off"><button class="primary" id="metaBtn">לפתור</button></div>
+      <div class="err" id="metaErr"></div>
+      <div class="row"><button class="ghost" id="hintBtn">לחשוף אות (10- נקודות)</button><button class="ghost" id="giveBtn">לוותר ולראות</button></div>
+    </div></div>`;
+  const inp=$('#metaIn');inp.focus();inp.addEventListener('input',()=>$('#metaErr').textContent='');
+  const go=()=>{const v=inp.value.trim();if(!v){$('#metaErr').textContent='כתוב פתרון קודם';return}
+    if(normSet([P.meta.a,...P.meta.al]).has(norm(v))){S.metaSolved=true;finish()}
+    else{S.metaWrong++;save();$('#metaErr').textContent='עדיין לא. מה משותף לכל הערכים?'}};
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter')go()});$('#metaBtn').onclick=go;
+  $('#hintBtn').onclick=()=>{if(S.metaHints<ans.replace(/\s/g,'').length-1){S.metaHints++;save();renderMeta()}};
+  $('#giveBtn').onclick=()=>{S.gaveUp=true;finish()};
+}
+function computeScore(){
+  const solved=S.pieces.filter(p=>p.solved).length,bought=S.pieces.reduce((a,p)=>a+p.bought,0),wrong=S.pieces.reduce((a,p)=>a+p.wrong,0);
+  const parts=[['ערכים שפוצחו',solved*100],['תחנות',-2*S.stations],['רמזים שנקנו',-3*bought],['מצפן',-3*(S.compass||0)],['ניחושים שגויים',-3*wrong],['שערים נכונים',3*S.gatesOk],['החידה הגדולה',S.metaSolved?60:0],['אותיות שנחשפו',-10*S.metaHints],['ניסיונות שגויים בחידה',-5*S.metaWrong]];
+  return {parts,total:Math.max(0,parts.reduce((a,x)=>a+x[1],0))};
+}
+function finish(){
+  S.phase='done';clearInterval(timerId);
+  const sc=computeScore(),P=puzzle();
+  const entry={name:S.name,answer:base(P.meta.a),score:sc.total,stations:S.stations,time:S.timeMs,level:S.level,date:new Date().toISOString().slice(0,10)};
+  let b=board();b.push(entry);b.sort((x,y)=>y.score-x.score||x.time-y.time);b=b.slice(0,50);
+  try{localStorage.setItem(LS_BOARD,JSON.stringify(b))}catch(e){}
+  clearSaved();renderStats();
+  const rank=b.indexOf(entry)+1;
+  $('#app').innerHTML=`<div class="end">
+    <div><span class="stamp">${S.gaveUp?'החידה נחשפה':'החידה נפתרה'}</span></div>
+    <h1 style="font-size:clamp(34px,6vw,52px);font-weight:900">${esc(P.meta.a)}</h1>
+    <div class="card" style="display:flex;flex-wrap:wrap;gap:24px;align-items:center">
+      <div><div class="label">ניקוד</div><div class="score-big">${sc.total}</div><div class="label">מקום ${rank} בטבלה · ${S.stations} תחנות · ${fmtTime(S.timeMs)}</div></div>
+      <table class="board" style="flex:1;min-width:220px"><tbody>${sc.parts.filter(x=>x[1]).map(x=>`<tr><td>${x[0]}</td><td style="text-align:end">${x[1]>0?'+':''}${x[1]}</td></tr>`).join('')}</tbody></table>
+    </div>
+    <div class="card"><h3 style="margin-bottom:10px">מה גילית בדרך</h3><div class="learned">${S.pieces.map(p=>`<div><b>${esc(base(p.title))}</b>${p.extract?`<p>${esc(p.extract)}</p>`:''}</div>`).join('')}</div></div>
+    <div class="card"><h3 style="margin-bottom:8px">טבלת השיאים במכשיר הזה</h3>${boardTable(b.slice(0,10))}</div>
+    <div><button class="primary" id="againBtn">חידה חדשה</button></div>
+  </div>`;
+  $('#againBtn').onclick=renderSetup;
+  S=null;
+}
+
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){const m=document.querySelector('#gCancel');if(m)m.click()}});
+renderSetup();
+</script>
+</body>
+</html>
