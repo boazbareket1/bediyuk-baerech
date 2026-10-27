@@ -29,6 +29,33 @@ window.GIFT_TOOLS = [
   "idea": "עוברים סביב השולחן, מכניסים את כל מי שיושב בו, וקוראים יחד מה כל אחד מביא למשפחה."
  },
  {
+  "id": "emotion-combo",
+  "gift": "request",
+  "kind": "התבוננות",
+  "name": "קומבינציית רגשות",
+  "url": "https://boazbareket1.github.io/emotion-combo/emotion-combo%20(2).html",
+  "what": "מרכיבים מקלפים את צירוף הרגשות של הרגע, ומשתפים אותו במילים.",
+  "idea": "בוחרים את הקלפים של הרגע, ומשתפים במשפט אחד."
+ },
+ {
+  "id": "meeting-sync",
+  "gift": "request",
+  "kind": "התבוננות",
+  "name": "מתאם הזמנים",
+  "url": "https://boazbareket1.github.io/meeting-sync/",
+  "what": "כל אחד מסמן מתי הוא פנוי, ורואים מיד מתי כולם יכולים להיפגש. בלי הרשמה.",
+  "idea": "מתכננים יחד את המפגש המשפחתי הבא."
+ },
+ {
+  "id": "chakra-compass",
+  "gift": "request",
+  "kind": "ידע עצמי",
+  "name": "נתיב האור",
+  "url": "https://boazbareket1.github.io/chakra-compass/",
+  "what": "מסע תלת־ממדי בין מרכזי האנרגיה בגוף, שבסופו נבנה מסע אנרגטי אישי.",
+  "idea": "רגע שקט עם אוזניות, ובסוף משתפים משפט אחד."
+ },
+ {
   "id": "mazalot",
   "gift": "request",
   "kind": "ידע עצמי",
@@ -36,6 +63,60 @@ window.GIFT_TOOLS = [
   "url": "https://boazbareket1.github.io/Mazalot/",
   "what": "מזינים תאריך לידה, מגלים את תכונות המזל, מדרגים מה נוכח בך ומה חשוב לך, בודקים התאמה זוגית ושולחים לעצמך סיכום אישי.",
   "idea": "כל אחד מדרג את עצמו, ואחר כך משווים."
+ },
+ {
+  "id": "politikalpi",
+  "gift": "request",
+  "kind": "לכולם",
+  "name": "פוליטיקלפי",
+  "url": "https://boazbareket1.github.io/politikalpi/",
+  "what": "איזו מפלגה הכי קרובה לעמדות שלך, בחירות לכנסת ה־26",
+  "idea": "כל אחד עונה לבד, ואחר כך משווים בלי ויכוחים."
+ },
+ {
+  "id": "fill-drill",
+  "gift": "request",
+  "kind": "מוזיקה",
+  "name": "Fill Drill",
+  "url": "https://boazbareket1.github.io/fill-drill/",
+  "what": "מאמן מעברים בתופים: בונים מעבר על גריד צבעוני, בוחרים טמפו ומתרגלים עם מטרונום.",
+  "idea": "בונים מעבר אחד על הגריד, ומתרגלים אותו לאט עם המטרונום עד שהוא יושב."
+ },
+ {
+  "id": "loop-lab",
+  "gift": "request",
+  "kind": "מוזיקה",
+  "name": "Loop Lab",
+  "url": "https://boazbareket1.github.io/loop-lab/",
+  "what": "מחולל לופים הרמוניים לאלתור, עם המלצות על סולמות שכדאי לנסות מעל כל אקורד.",
+  "idea": "בוחרים סולם, מפעילים לופ ומאלתרים מעליו."
+ },
+ {
+  "id": "tanpura-stage",
+  "gift": "request",
+  "kind": "מוזיקה",
+  "name": "Tanpura Stage",
+  "url": "https://boazbareket1.github.io/tanpura-stage/",
+  "what": "ליווי חי להופעות ולאלתור: טנפורה, פדים וביטים באותו סולם, ישר מהדפדפן.",
+  "idea": "מדליקים טנפורה, בוחרים סולם, ושרים או מנגנים מעליה."
+ },
+ {
+  "id": "fruty-beat",
+  "gift": "request",
+  "kind": "מוזיקה",
+  "name": "Beat It · FrutyBeat",
+  "url": "https://boazbareket1.github.io/Fruty-Beat-It/",
+  "what": "משחק קצב עם פירות: מרכיבים תיבות מקצב מקלפי פירות ושומעים אותן מתנגנות.",
+  "idea": "בונים מקצב מפירות, ומשמיעים אותו לכל השולחן."
+ },
+ {
+  "id": "beat-it-notes",
+  "gift": "request",
+  "kind": "מוזיקה",
+  "name": "Beat It Notes",
+  "url": "https://boazbareket1.github.io/beat-it-notes/",
+  "what": "משחק קלפי מקצב בתווים: אזור תרגול שבו רואים ושומעים מקצבים, ואזור משחק שבו מאזינים, מזהים ובונים תיבה זהה מקלפים.",
+  "idea": "מתחילים באזור התרגול, ואז עוברים לאזור המשחק ואוספים עשרה קלפים."
  },
  {
   "id": "tmvmc6gjy",
@@ -71,15 +152,6 @@ window.GIFT_TOOLS = [
   "name": "גלקסיית האיכויות",
   "url": "https://boazbareket1.github.io/qualitystars/galaxy_of_qualities_4.html",
   "what": "נכנסים לחדר של איכות כמו רוך, אמון או נדיבות, ומעבדים דרכה אירוע שהפעיל אותנו.",
-  "idea": ""
- },
- {
-  "id": "emotion-combo",
-  "gift": "off",
-  "kind": "התבוננות",
-  "name": "קומבינציית רגשות",
-  "url": "https://boazbareket1.github.io/emotion-combo/emotion-combo%20(2).html",
-  "what": "מרכיבים מקלפים את צירוף הרגשות של הרגע, ומשתפים אותו במילים.",
   "idea": ""
  },
  {
@@ -128,15 +200,6 @@ window.GIFT_TOOLS = [
   "idea": ""
  },
  {
-  "id": "meeting-sync",
-  "gift": "off",
-  "kind": "התבוננות",
-  "name": "מתאם הזמנים",
-  "url": "https://boazbareket1.github.io/meeting-sync/",
-  "what": "כל אחד מסמן מתי הוא פנוי, ורואים מיד מתי כולם יכולים להיפגש. בלי הרשמה.",
-  "idea": "מתכננים יחד את המפגש המשפחתי הבא."
- },
- {
   "id": "grapholog",
   "gift": "off",
   "kind": "ידע עצמי",
@@ -144,69 +207,6 @@ window.GIFT_TOOLS = [
   "url": "https://boazbareket1.github.io/grapholog/",
   "what": "כותבים דף ביד, מצלמים, ומקבלים קריאה של הכתב והאישיות ונקודות למחשבה.",
   "idea": "כותבים דף קצר על הרגע הזה, ומצלמים."
- },
- {
-  "id": "chakra-compass",
-  "gift": "off",
-  "kind": "ידע עצמי",
-  "name": "נתיב האור",
-  "url": "https://boazbareket1.github.io/chakra-compass/",
-  "what": "מסע תלת־ממדי בין מרכזי האנרגיה בגוף, שבסופו נבנה מסע אנרגטי אישי.",
-  "idea": "רגע שקט עם אוזניות, ובסוף משתפים משפט אחד."
- },
- {
-  "id": "politikalpi",
-  "gift": "off",
-  "kind": "לכולם",
-  "name": "פוליטיקלפי",
-  "url": "https://boazbareket1.github.io/politikalpi/",
-  "what": "איזו מפלגה הכי קרובה לעמדות שלך, בחירות לכנסת ה־26",
-  "idea": "כל אחד עונה לבד, ואחר כך משווים בלי ויכוחים."
- },
- {
-  "id": "fill-drill",
-  "gift": "off",
-  "kind": "מוזיקה",
-  "name": "Fill Drill",
-  "url": "https://boazbareket1.github.io/fill-drill/",
-  "what": "מאמן מעברים בתופים: בונים מעבר על גריד צבעוני, בוחרים טמפו ומתרגלים עם מטרונום.",
-  "idea": "בונים מעבר אחד על הגריד, ומתרגלים אותו לאט עם המטרונום עד שהוא יושב."
- },
- {
-  "id": "loop-lab",
-  "gift": "off",
-  "kind": "מוזיקה",
-  "name": "Loop Lab",
-  "url": "https://boazbareket1.github.io/loop-lab/",
-  "what": "מחולל לופים הרמוניים לאלתור, עם המלצות על סולמות שכדאי לנסות מעל כל אקורד.",
-  "idea": ""
- },
- {
-  "id": "tanpura-stage",
-  "gift": "off",
-  "kind": "מוזיקה",
-  "name": "Tanpura Stage",
-  "url": "https://boazbareket1.github.io/tanpura-stage/",
-  "what": "ליווי חי להופעות ולאלתור: טנפורה, פדים וביטים באותו סולם, ישר מהדפדפן.",
-  "idea": ""
- },
- {
-  "id": "fruty-beat",
-  "gift": "off",
-  "kind": "מוזיקה",
-  "name": "Beat It · FrutyBeat",
-  "url": "https://boazbareket1.github.io/Fruty-Beat-It/",
-  "what": "משחק קצב עם פירות: מרכיבים תיבות מקצב מקלפי פירות ושומעים אותן מתנגנות.",
-  "idea": "בונים מקצב מפירות, ומשמיעים אותו לכל השולחן."
- },
- {
-  "id": "beat-it-notes",
-  "gift": "off",
-  "kind": "מוזיקה",
-  "name": "Beat It Notes",
-  "url": "https://boazbareket1.github.io/beat-it-notes/",
-  "what": "משחק קלפי מקצב בתווים: אזור תרגול שבו רואים ושומעים מקצבים, ואזור משחק שבו מאזינים, מזהים ובונים תיבה זהה מקלפים.",
-  "idea": "מתחילים באזור התרגול, ואז עוברים לאזור המשחק ואוספים עשרה קלפים."
  },
  {
   "id": "shminiot",
