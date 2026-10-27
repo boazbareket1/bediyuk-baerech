@@ -103,7 +103,7 @@ function open(){
       <p class="inside">${esc(GIFT.insideLabel)}</p>
       <div class="apps">${GIFT.apps.map(a=>`<article class="app"><h2>${esc(a.name)}</h2><p>${esc(a.what)}</p>${a.idea?`<div class="idea"><b>${esc(GIFT.ideaLabel)}</b> ${esc(a.idea)}</div>`:''}<a href="${esc(a.url)}" target="_blank" rel="noopener">${esc(a.button||'לפתוח')} ←</a></article>`).join('')}</div>`;
     c.hidden=false;
-    const f=document.getElementById('foot');f.textContent=GIFT.footer||'';f.hidden=!GIFT.footer;
+    const f=document.getElementById('foot');f.innerHTML=GIFT.footerHref?`<a href="${esc(GIFT.footerHref)}" style="color:inherit">${esc(GIFT.footer)}</a>`:esc(GIFT.footer||'');f.hidden=!GIFT.footer;
   },matchMedia('(prefers-reduced-motion: reduce)').matches?0:750);
 }
 document.getElementById('parcel').onclick=open;document.getElementById('openBtn').onclick=open;

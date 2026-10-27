@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>מדף המתנות</title>
+<meta property="og:title" content="מדף המתנות של בועז 🎁">
+<meta property="og:description" content="בוחרים משחק או כלי, כותבים ברכה, ושולחים לחבר חבילה עטופה.">
+<meta name="description" content="בוחרים משחק או כלי, כותבים ברכה, ושולחים לחבר חבילה עטופה.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Suez+One&family=Frank+Ruhl+Libre:wght@400;500;700&family=Rubik:wght@400;500;700&display=swap">
+<style>
+/* Layout: a shop shelf on wrapping-paper ground; pick items, write the card, wrap */
+:root{
+  --paper:#F3EDE3; --pattern:#E6DCCB; --wrap:#1F4E5F; --wrap-2:#2A6478; --ribbon:#D9603B; --ribbon-dk:#A9442A;
+  --card:#FFFCF7; --ink:#1E2A2F; --ink-2:#5B6A6E; --line:#E3D9C9; --gold:#B5891F; --sel:#E5F0F2; --err:#A3321F;
+  --display:"Suez One","Frank Ruhl Libre",serif; --read:"Frank Ruhl Libre","Times New Roman",serif; --ui:"Rubik",Arial,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#171C1E; --pattern:#20282B; --wrap:#2E6B80; --wrap-2:#3A7C92; --ribbon:#E9785A; --ribbon-dk:#E9785A;
+  --card:#22292C; --ink:#EDE6DA; --ink-2:#A9B3B3; --line:#344044; --gold:#E2B858; --sel:#1F3A42; --err:#F09A83; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#171C1E; --pattern:#20282B; --wrap:#2E6B80; --wrap-2:#3A7C92; --ribbon:#E9785A; --ribbon-dk:#E9785A;
+  --card:#22292C; --ink:#EDE6DA; --ink-2:#A9B3B3; --line:#344044; --gold:#E2B858; --sel:#1F3A42; --err:#F09A83; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;background:var(--paper);color:var(--ink)}
+body{font-family:var(--ui);font-size:16px;line-height:1.6;
+  background-image:radial-gradient(var(--pattern) 2px,transparent 2.5px),radial-gradient(var(--pattern) 2px,transparent 2.5px);
+  background-size:28px 28px;background-position:0 0,14px 14px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:calc(24px + env(safe-area-inset-top,0px)) calc(48px + env(safe-area-inset-bottom,0px))}
+.wrap{max-width:860px;margin:0 auto;display:grid;gap:26px}
+h1,h2{font-family:var(--display);font-weight:400;margin:0;line-height:1.15;text-wrap:balance}
+h1{font-size:clamp(38px,8vw,58px)}
+h1 span{color:var(--ribbon-dk)}
+h2{font-size:26px}
+.lead{font-family:var(--read);font-size:19px;color:var(--ink-2);max-width:56ch;margin:6px 0 0}
+.step{display:grid;gap:12px}
+.step-h{display:flex;align-items:baseline;gap:10px}
+.num{font-family:var(--display);color:var(--ribbon-dk);font-size:22px}
+.sub{color:var(--ink-2);font-size:15px;margin:0}
+.shelf{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.item{position:relative;text-align:start;background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:14px 16px 16px;display:grid;gap:6px;cursor:pointer;font:inherit;color:inherit;align-content:start;min-width:0}
+.item:hover{border-color:var(--wrap-2)}
+.item[aria-pressed="true"]{border-color:var(--wrap);background:var(--sel)}
+.item .kind{font-size:12px;letter-spacing:.05em;color:var(--gold);font-weight:700}
+.item b{font-family:var(--display);font-weight:400;font-size:22px;line-height:1.2}
+.item p{margin:0;color:var(--ink-2);font-family:var(--read);font-size:16px}
+.check{position:absolute;top:12px;left:12px;width:24px;height:24px;border-radius:50%;border:1.5px solid var(--line);display:grid;place-items:center;font-size:14px;color:transparent}
+.item[aria-pressed="true"] .check{background:var(--wrap);border-color:var(--wrap);color:#fff}
+.req .item{padding:12px 14px}
+.req .item b{font-size:19px}
+.req .shelf{grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
+.req .item p{font-size:14px;line-height:1.45}
+.badge{display:inline-block;font-size:12px;font-weight:500;border-radius:999px;padding:2px 10px;background:var(--ribbon);color:#fff;justify-self:start}
+.badge.soft{background:transparent;color:var(--ink-2);border:1px solid var(--line)}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;display:grid;gap:14px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+label{display:grid;gap:5px;font-size:14px;color:var(--ink-2)}
+input,textarea{font:inherit;font-size:16px;color:var(--ink);background:var(--paper);background-image:none;border:1px solid var(--line);border-radius:10px;padding:10px 12px;width:100%}
+textarea{font-family:var(--read);font-size:18px;min-height:130px;resize:vertical;line-height:1.6}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{font:inherit;font-size:15px;border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:999px;padding:6px 14px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--wrap);border-color:var(--wrap);color:#fff}
+.err{color:var(--err);font-size:14px;min-height:1.2em;margin:0}
+.btn{font:inherit;font-size:17px;font-weight:500;border:0;border-radius:999px;padding:12px 24px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:8px;justify-content:center}
+.btn.main{background:var(--ribbon);color:#fff}
+.btn.main:hover{background:var(--ribbon-dk)}
+.btn.wa{background:#1E8E4F;color:#fff}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.result{border:2px dashed var(--ribbon);border-radius:14px;padding:16px;display:grid;gap:12px;background:var(--paper);background-image:none}
+.result h3{font-family:var(--display);font-weight:400;font-size:24px;margin:0}
+.linkbox{font-family:ui-monospace,Menlo,monospace;font-size:13px;direction:ltr;text-align:left;overflow-wrap:anywhere;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+.summary{font-size:15px;color:var(--ink-2);margin:0}
+.admin{background:var(--gold);color:#1E2A2F;border-radius:8px;padding:6px 12px;font-size:14px;justify-self:start}
+:focus-visible{outline:3px solid var(--ribbon);outline-offset:2px}
+footer{font-size:13px;color:var(--ink-2);text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>מדף <span>המתנות</span></h1>
+    <p class="lead">בוחרים משחק או כלי שבועז בנה, כותבים ברכה, ושולחים לחבר חבילה עטופה שנפתחת בלחיצה.</p>
+  </header>
+  <div class="admin" id="adminBadge" hidden>מצב בועז: כל הכלים זמינים כמתנה מיידית</div>
+
+  <section class="step">
+    <div class="step-h"><span class="num">1</span><h2>מה נכנס לחבילה</h2></div>
+    <p class="sub" id="shelfSub">הכלים שעל המדף נעטפים ונשלחים מיד. אפשר לבחור עד ארבעה.</p>
+    <div class="shelf" id="shelf"></div>
+  </section>
+
+  <section class="step req" id="reqSec">
+    <div class="step-h"><h2 style="font-size:22px">בהזמנה מבועז</h2></div>
+    <p class="sub">כלים שנשלחים אחרי אישור קצר של בועז. בוחרים, שולחים לו בקשה בוואטסאפ, והוא מחזיר קישור למתנה.</p>
+    <div class="shelf" id="reqShelf"></div>
+  </section>
+
+  <section class="step">
+    <div class="step-h"><span class="num">2</span><h2>כרטיס הברכה</h2></div>
+    <div class="panel">
+      <div class="grid2">
+        <label for="toIn">למי המתנה<input id="toIn" maxlength="30" placeholder="שאולי" autocomplete="off"></label>
+        <label for="fromIn">ממי<input id="fromIn" maxlength="30" placeholder="השם שלך" autocomplete="name"></label>
+      </div>
+      <div style="display:grid;gap:6px"><span style="font-size:14px;color:var(--ink-2)">לכבוד</span><div class="chips" id="occ"></div></div>
+      <label for="msgIn">הברכה<textarea id="msgIn"></textarea></label>
+      <p class="err" id="formErr"></p>
+    </div>
+  </section>
+
+  <section class="step">
+    <div class="step-h"><span class="num">3</span><h2>לעטוף ולשלוח</h2></div>
+    <p class="summary" id="summary"></p>
+    <div class="actions"><button class="btn main" id="goBtn">לעטוף את המתנה</button></div>
+    <div class="result" id="result" hidden></div>
+  </section>
+
+  <footer>כל הכלים נבנו בסטודיו של בועז ברקת</footer>
+</div>
+
+<script src="tools.js"></script>
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ADMIN=new URLSearchParams(location.search).get('admin')==='1';
+const OCC=['יום הולדת','תודה','חג','מזל טוב','סתם כי בא לי'];
+const MSG={
+ 'יום הולדת':'ליום ההולדת שלך ארזתי משהו שלא צריך לעטוף בנייר: משחק לראש ולב, לרגעים פנויים ולשולחן עם החברים.\nמאחל/ת לך שנה של סקרנות, צחוק וחיבורים טובים.',
+ 'תודה':'רציתי להגיד תודה, ובמקום פרחים בחרתי משהו שישאר איתך: כלי קטן לרגעים טובים.',
+ 'חג':'לכבוד החג, משהו קטן לשולחן ולשיחה. חג שמח!',
+ 'מזל טוב':'מזל טוב! הנה משהו קטן לחגוג איתו.',
+ 'סתם כי בא לי':'ראיתי את זה ונזכרתי בך. מקווה שתיהנה/י!'
+};
+let sel=new Set(),occ='יום הולדת',msgTouched=false;
+const isShelf=t=>ADMIN||t.shelf;
+try{const f=localStorage.getItem('matana.from');if(f)$('#fromIn').value=f}catch(e){}
+
+function card(t){return `<button class="item" data-id="${t.id}" aria-pressed="${sel.has(t.id)}"><span class="check" aria-hidden="true">✓</span><span class="kind">${esc(t.kind)}</span><b>${esc(t.name)}</b><p>${esc(t.what)}</p></button>`}
+function render(){
+  $('#shelf').innerHTML=GIFT_TOOLS.filter(isShelf).map(card).join('');
+  const req=GIFT_TOOLS.filter(t=>!isShelf(t));
+  $('#reqSec').hidden=!req.length;$('#reqShelf').innerHTML=req.map(card).join('');
+  $('#occ').innerHTML=OCC.map(o=>`<button class="chip" data-o="${o}" aria-pressed="${o===occ}">${o}</button>`).join('');
+  summarize();
+}
+function chosen(){return GIFT_TOOLS.filter(t=>sel.has(t.id))}
+function needsRequest(){return chosen().some(t=>!isShelf(t))}
+function summarize(){
+  const c=chosen();
+  if(!c.length){$('#summary').textContent='עוד לא נבחר כלי לחבילה.';$('#goBtn').textContent='לעטוף את המתנה';return}
+  $('#summary').textContent='בחבילה: '+c.map(t=>t.name).join(', ')+'.'+(needsRequest()?' יש כאן כלי בהזמנה, אז הבקשה תעבור קודם לבועז.':'');
+  $('#goBtn').textContent=needsRequest()?'לשלוח בקשה לבועז':'לעטוף את המתנה';
+}
+function onPick(e){const b=e.target.closest('.item');if(!b)return;const id=b.dataset.id;
+  if(sel.has(id))sel.delete(id);else{if(sel.size>=4){$('#formErr').textContent='אפשר עד ארבעה כלים בחבילה אחת.';return}sel.add(id)}
+  $('#formErr').textContent='';$('#result').hidden=true;b.setAttribute('aria-pressed',sel.has(id));summarize()}
+$('#shelf').onclick=onPick;$('#reqShelf').onclick=onPick;
+$('#occ').onclick=e=>{const b=e.target.closest('.chip');if(!b)return;occ=b.dataset.o;
+  $('#occ').querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed',c===b));
+  if(!msgTouched)$('#msgIn').value=MSG[occ];$('#result').hidden=true};
+$('#msgIn').value=MSG[occ];
+$('#msgIn').addEventListener('input',()=>{msgTouched=true;$('#result').hidden=true});
+['#toIn','#fromIn'].forEach(s=>$(s).addEventListener('input',()=>{$('#formErr').textContent='';$('#result').hidden=true}));
+
+function giftLink(){
+  const d={t:$('#toIn').value.trim(),f:$('#fromIn').value.trim(),o:occ,m:$('#msgIn').value.trim(),a:[...sel]};
+  return new URL('gift.html?d='+giftEncode(d),location.href).href;
+}
+async function copy(text,btn){
+  try{await navigator.clipboard.writeText(text);btn.textContent='הועתק';setTimeout(()=>btn.textContent='להעתיק',1600)}
+  catch(e){const r=document.createRange();const box=$('#linkBox');if(box){r.selectNodeContents(box);const s=getSelection();s.removeAllRanges();s.addRange(r)}}
+}
+$('#goBtn').onclick=()=>{
+  const to=$('#toIn').value.trim(),from=$('#fromIn').value.trim();
+  if(!sel.size){$('#formErr').textContent='בחרו לפחות כלי אחד לחבילה.';$('#shelf').scrollIntoView({behavior:'smooth',block:'center'});return}
+  if(!to){$('#formErr').textContent='כתבו למי המתנה.';$('#toIn').focus();return}
+  if(!from){$('#formErr').textContent='כתבו ממי המתנה.';$('#fromIn').focus();return}
+  try{localStorage.setItem('matana.from',from)}catch(e){}
+  const r=$('#result');
+  if(needsRequest()){
+    const text=`היי בועז, זה ${from} 🙂\nאני רוצה לשלוח מתנה ל${to} (${occ}) מתוך מדף המתנות:\n${chosen().map(t=>'• '+t.name).join('\n')}\n\nהברכה שכתבתי:\n${$('#msgIn').value.trim()}\n\nאפשר לקבל ממך קישור למתנה?`;
+    const wa=(BOAZ_WA?'https://wa.me/'+BOAZ_WA:'https://wa.me/')+'?text='+encodeURIComponent(text);
+    r.innerHTML=`<h3>הבקשה מוכנה</h3><p class="summary">ההודעה נפתחת בוואטסאפ${BOAZ_WA?' אל בועז':'. בחרו את הצ\'אט עם בועז'} ושולחים. בועז יחזיר קישור לחבילה העטופה.</p><div class="actions"><a class="btn wa" href="${esc(wa)}" target="_blank" rel="noopener">לשלוח לבועז בוואטסאפ</a></div>`;
+  }else{
+    const link=giftLink();
+    const share=`${to}, הגיעה אליך מתנה ממני 🎁\nפותחים את החבילה כאן:\n${link}`;
+    r.innerHTML=`<h3>המתנה עטופה</h3><p class="summary">זה הקישור לחבילה. שולחים אותו ל${esc(to)}, והחבילה נפתחת בלחיצה.</p>
+      <div class="linkbox" id="linkBox">${esc(link)}</div>
+      <div class="actions"><a class="btn wa" href="${esc('https://wa.me/?text='+encodeURIComponent(share))}" target="_blank" rel="noopener">לשלוח בוואטסאפ</a>
+      <button class="btn ghost" id="copyBtn">להעתיק</button><a class="btn ghost" href="${esc(link)}" target="_blank" rel="noopener">לראות את החבילה</a></div>`;
+    $('#copyBtn').onclick=e=>copy(link,e.currentTarget);
+  }
+  r.hidden=false;r.scrollIntoView({behavior:'smooth',block:'nearest'});
+};
+if(ADMIN){$('#adminBadge').hidden=false;$('#shelfSub').textContent='במצב בועז כל הכלים זמינים. אפשר לבחור עד ארבעה.'}
+const pre=new URLSearchParams(location.search).get('tool');if(pre&&GIFT_TOOLS.some(t=>t.id===pre))sel.add(pre);
+render();
+</script>
+</body>
+</html>
