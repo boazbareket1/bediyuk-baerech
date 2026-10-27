@@ -99,6 +99,17 @@ body{font-family:var(--ui);font-size:17px;line-height:1.6;
 .app a{justify-self:start;margin-top:6px;text-decoration:none;font-weight:500;background:var(--wrap);color:#fff;border-radius:999px;padding:9px 18px}
 .app a:hover{background:var(--wrap-2)}
 .app a:focus-visible,.cta:focus-visible{outline:3px solid var(--ribbon);outline-offset:3px}
+/* thank-you corner */
+.thanks{border-top:1px dashed var(--line);padding-top:16px;display:grid;gap:10px}
+.thanks h3{font-family:var(--display);font-weight:400;font-size:24px;margin:0;line-height:1.2}
+.thanks p{margin:0;color:var(--ink-2);font-size:15px}
+.thanks .tried{color:var(--ink);font-weight:500}
+.thanks textarea{font:inherit;font-family:var(--read);font-size:17px;line-height:1.6;color:var(--ink);background:var(--paper);background-image:none;border:1px solid var(--line);border-radius:10px;padding:10px 12px;width:100%;min-height:110px;resize:vertical}
+.tbtns{display:flex;flex-wrap:wrap;gap:8px}
+.tbtn{font:inherit;font-size:15px;font-weight:500;border-radius:999px;padding:9px 18px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;border:1.5px solid var(--wrap);background:transparent;color:var(--wrap)}
+.tbtn.main{background:#1E8E4F;border-color:#1E8E4F;color:#fff}
+.tbtn:focus-visible{outline:3px solid var(--ribbon);outline-offset:3px}
+.tnote{font-size:13px;color:var(--ink-2)}
 footer{font-size:13px;color:var(--ink-2);text-align:center}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
@@ -116,13 +127,50 @@ footer{font-size:13px;color:var(--ink-2);text-align:center}
   <footer id="foot" hidden></footer>
 </main>
 <script>
-const GIFT={"occasion": "יום הולדת", "toLine": "שאולי, הגיעה אליך חבילה", "tag": "לשאולי, מיפעת ובעז", "headline": "מזל טוב, שאולי!", "signature": "באהבה, יפעת ובעז", "insideLabel": "בתוך החבילה", "ideaLabel": "איך מתחילים:", "footer": "רוצים לשלוח מתנה כזו למישהו? למדף המתנות", "footerHref": "./", "file": "shauli-f.html", "title": "מתנה לשאולי", "ogDesc": "חבילת יום הולדת מיפעת ובעז: ארבעה כלים לראש וללב. לחיצה פותחת את החבילה.", "tools": ["family-weave", "numerology", "bediyuk-baerech", "mazalot"], "message": "ליום ההולדת שלך ארזנו משהו שלא צריך לעטוף בנייר: כלים לראש וללב, לרגעים פנויים ולשולחן עם החברים.\nשתהיה לך שנה של טבע, אהבה, שמחה, שפע, סקרנות, צחוק וחיבורים טובים.", "skin": "flowers", "apps": [{"name": "המארג המשפחתי", "what": "מעגל התפתחות נומרולוגי: כל אחד מצטרף בסריקת QR ומקבל מפה אישית, ויחד חושפים שליחות, תפקידים, חוטים וחיכוכים. כולל תצוגת הנחיה להקראה ומשחק זיהוי.", "idea": "עוברים סביב השולחן, מכניסים את כל מי שיושב בו, וקוראים יחד מה כל אחד מביא למשפחה.", "url": "https://boazbareket1.github.io/family-weave/?s=gift", "button": "לפתוח"}, {"name": "מפת המספרים", "what": "ניתוח אישיות לפי תאריך הלידה והשם, בגימטריה עברית ובשיטה הפיתגוראית, כולל התאמה זוגית ותחזית.", "idea": "מכניסים את התאריך שלך, ואחר כך בודקים יחד את ההתאמה הזוגית.", "url": "https://boazbareket1.github.io/numerology-map/?s=gift", "button": "לפתוח"}, {"name": "בדיוק בערך", "what": "משחק חידות בוויקיפדיה: קוראים ערכים, אוספים רמזים ומגלים ערכים נסתרים שיחד פותרים חידה גדולה.", "idea": "כל אחד בטלפון שלו, אותה רמת קושי, ומי שפותר ראשון מנצח.", "url": "https://boazbareket1.github.io/bediyuk-baerech/?s=gift", "button": "לפתוח"}, {"name": "מזלות", "what": "מזינים תאריך לידה, מגלים את תכונות המזל, מדרגים מה נוכח בך ומה חשוב לך, בודקים התאמה זוגית ושולחים לעצמך סיכום אישי.", "idea": "כל אחד מדרג את עצמו, ואחר כך משווים.", "url": "https://boazbareket1.github.io/Mazalot/?s=gift", "button": "לפתוח"}]};
+const GIFT={"occasion": "יום הולדת", "toLine": "שאולי, הגיעה אליך חבילה", "tag": "לשאולי, מיפעת ובעז", "headline": "מזל טוב, שאולי!", "signature": "באהבה, יפעת ובעז", "insideLabel": "בתוך החבילה", "ideaLabel": "איך מתחילים:", "footer": "רוצים לשלוח מתנה כזו למישהו? למדף המתנות", "footerHref": "./", "file": "shauli-f.html", "title": "מתנה לשאולי", "ogDesc": "חבילת יום הולדת מיפעת ובעז: ארבעה כלים לראש וללב. לחיצה פותחת את החבילה.", "tools": ["family-weave", "numerology", "bediyuk-baerech", "mazalot"], "message": "ליום ההולדת שלך ארזנו משהו שלא צריך לעטוף בנייר: כלים לראש וללב, לרגעים פנויים ולשולחן עם החברים.\nשתהיה לך שנה של טבע, אהבה, שמחה, שפע, סקרנות, צחוק וחיבורים טובים.", "skin": "flowers", "from": "יפעת ובעז", "to": "שאולי", "apps": [{"name": "המארג המשפחתי", "what": "מעגל התפתחות נומרולוגי: כל אחד מצטרף בסריקת QR ומקבל מפה אישית, ויחד חושפים שליחות, תפקידים, חוטים וחיכוכים. כולל תצוגת הנחיה להקראה ומשחק זיהוי.", "idea": "עוברים סביב השולחן, מכניסים את כל מי שיושב בו, וקוראים יחד מה כל אחד מביא למשפחה.", "url": "https://boazbareket1.github.io/family-weave/?s=gift", "button": "לפתוח"}, {"name": "מפת המספרים", "what": "ניתוח אישיות לפי תאריך הלידה והשם, בגימטריה עברית ובשיטה הפיתגוראית, כולל התאמה זוגית ותחזית.", "idea": "מכניסים את התאריך שלך, ואחר כך בודקים יחד את ההתאמה הזוגית.", "url": "https://boazbareket1.github.io/numerology-map/?s=gift", "button": "לפתוח"}, {"name": "בדיוק בערך", "what": "משחק חידות בוויקיפדיה: קוראים ערכים, אוספים רמזים ומגלים ערכים נסתרים שיחד פותרים חידה גדולה.", "idea": "כל אחד בטלפון שלו, אותה רמת קושי, ומי שפותר ראשון מנצח.", "url": "https://boazbareket1.github.io/bediyuk-baerech/?s=gift", "button": "לפתוח"}, {"name": "מזלות", "what": "מזינים תאריך לידה, מגלים את תכונות המזל, מדרגים מה נוכח בך ומה חשוב לך, בודקים התאמה זוגית ושולחים לעצמך סיכום אישי.", "idea": "כל אחד מדרג את עצמו, ואחר כך משווים.", "url": "https://boazbareket1.github.io/Mazalot/?s=gift", "button": "לפתוח"}]};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 document.title=GIFT.title;
 const SKIN=['box','balloons','flowers'].includes(GIFT.skin)?GIFT.skin:'box';document.documentElement.dataset.skin=SKIN;
 document.getElementById('deco').innerHTML=SKIN==='balloons'?'<i class="bal b1"></i><i class="bal b2"></i><i class="bal b3"></i>':SKIN==='flowers'?'<i class="leaf l1"></i><i class="leaf l2"></i><i class="fl f1"></i><i class="fl f2"></i><i class="fl f3"></i>':'';
 document.getElementById('to').innerHTML=`<small>${esc(GIFT.occasion)}</small>${esc(GIFT.toLine)}`;
 document.getElementById('tag').textContent=GIFT.tag;
+const FROM=(GIFT.from||(GIFT.signature||'').replace(/^באהבה,\s*/,'')).trim();
+const TO=(GIFT.to||(GIFT.tag||'').replace(/^ל/,'').split(',')[0]).trim();
+const tried=new Set();
+function thanksHtml(){
+  const who=FROM||'מי ששלח לך את המתנה';
+  return `<section class="thanks" aria-labelledby="thH"><h3 id="thH">ניסית? כדאי לספר ל${esc(FROM||"מי ששלח")}</h3>
+    <p id="thLead">קודם כדאי לפתוח את הכלים ולשחק בהם קצת. אחר כך חוזרים לכאן ושולחים ל${esc(who)} כמה מילים: מה אהבת, מה גילית, או רק שהמתנה הגיעה.</p>
+    <div class="tbtns"><button class="tbtn" id="thQuick" type="button">רק לאשר שהמתנה הגיעה</button><button class="tbtn" id="thWrite" type="button">לכתוב תודה אישית</button></div>
+    <div id="thBox" hidden style="display:grid;gap:8px"><label for="thText" class="tnote">התודה שלך (אפשר לשנות הכול)</label><textarea id="thText"></textarea>
+      <div class="tbtns"><a class="tbtn main" id="thSend" href="#" target="_blank" rel="noopener">לשלוח בוואטסאפ</a></div>
+      <p class="tnote">וואטסאפ ייפתח עם ההודעה. בוחרים את הצ'אט עם ${esc(who)} ושולחים.</p></div></section>`;
+}
+function draft(){
+  const names=[...tried];
+  const hi=(FROM?'היי '+FROM+',':'היי,');
+  const body=names.length?`ניסיתי את ${names.join(' ואת ')}, ו`:'פתחתי את המתנה, ו';
+  return `${hi}\n${body}...\nתודה רבה על המתנה!${TO?'\n'+TO:''}`;
+}
+const waUrl=txt=>'https://wa.me/?text='+encodeURIComponent(txt);
+function bindThanks(){
+  const box=document.getElementById('thBox'),ta=document.getElementById('thText'),send=document.getElementById('thSend');
+  const sync=()=>{send.href=waUrl(ta.value.trim()||draft())};
+  document.getElementById('thWrite').onclick=()=>{box.hidden=false;if(!ta.dataset.touched)ta.value=draft();sync();ta.focus()};
+  ta.addEventListener('input',()=>{ta.dataset.touched='1';sync()});
+  document.getElementById('thQuick').onclick=()=>{
+    const msg=`${FROM?'היי '+FROM+', ':''}המתנה הגיעה ונפתחה. תודה רבה! בקרוב אנסה את הכלים.${TO?'\n'+TO:''}`;
+    window.open(waUrl(msg),'_blank','noopener')};
+  document.querySelectorAll('[data-tool]').forEach(a=>a.addEventListener('click',()=>{tried.add(a.dataset.tool);try{sessionStorage.setItem('gift.tried',JSON.stringify([...tried]))}catch(e){}}));
+  try{JSON.parse(sessionStorage.getItem('gift.tried')||'[]').forEach(n=>tried.add(n))}catch(e){}
+  showTried();
+}
+function showTried(){
+  const lead=document.getElementById('thLead');if(!lead||!tried.size)return;
+  lead.innerHTML=`<span class="tried">חזרת מ${esc([...tried].join(' ומ'))}? איך היה?</span> זה הזמן לשלוח ל${esc(FROM||'מי ששלח לך')} כמה מילים.`;
+  const ta=document.getElementById('thText');if(ta&&!ta.dataset.touched&&!document.getElementById('thBox').hidden){ta.value=draft();document.getElementById('thSend').href=waUrl(draft())}
+}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)showTried()});
 function open(){
   const p=document.getElementById('parcel');if(p.classList.contains('open'))return;
   p.classList.add('open');document.getElementById('openBtn').hidden=true;document.getElementById('hint').hidden=true;
@@ -131,8 +179,8 @@ function open(){
     const c=document.getElementById('card');
     c.innerHTML=`<h1>${esc(GIFT.headline)}</h1><p class="msg">${esc(GIFT.message)}</p><p class="sign">${esc(GIFT.signature)}</p>
       <p class="inside">${esc(GIFT.insideLabel)}</p>
-      <div class="apps">${GIFT.apps.map(a=>`<article class="app"><h2>${esc(a.name)}</h2><p>${esc(a.what)}</p>${a.idea?`<div class="idea"><b>${esc(GIFT.ideaLabel)}</b> ${esc(a.idea)}</div>`:''}<a href="${esc(a.url)}" target="_blank" rel="noopener">${esc(a.button||'לפתוח')} ←</a></article>`).join('')}</div>`;
-    c.hidden=false;
+      <div class="apps">${GIFT.apps.map(a=>`<article class="app"><h2>${esc(a.name)}</h2><p>${esc(a.what)}</p>${a.idea?`<div class="idea"><b>${esc(GIFT.ideaLabel)}</b> ${esc(a.idea)}</div>`:''}<a href="${esc(a.url)}" target="_blank" rel="noopener" data-tool="${esc(a.name)}">${esc(a.button||'לפתוח')} ←</a></article>`).join('')}</div>${thanksHtml()}`;
+    c.hidden=false;bindThanks();
     const f=document.getElementById('foot');f.innerHTML=GIFT.footerHref?`<a href="${esc(GIFT.footerHref)}" style="color:inherit">${esc(GIFT.footer)}</a>`:esc(GIFT.footer||'');f.hidden=!GIFT.footer;
   },matchMedia('(prefers-reduced-motion: reduce)').matches?0:750);
 }

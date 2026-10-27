@@ -14,7 +14,7 @@ try{
   const apps=(d.a||[]).map(id=>GIFT_TOOLS.find(x=>x.id===id)).filter(Boolean).map(x=>({name:x.name,what:x.what,idea:x.idea,url:x.url+(x.url.includes('?')?'&':'?')+'s=gift',button:'לפתוח'}));
   if(!apps.length)throw 0;
   const t=d.t||'',f=d.f||'',o=d.o||'מתנה';
-  GIFT={skin:d.s||"SKIN",title:'מתנה ל'+t,occasion:o,toLine:t+', הגיעה אליך חבילה',tag:'ל'+t+(f?', מ'+f:''),
+  GIFT={skin:d.s||"SKIN",from:f,to:t,title:'מתנה ל'+t,occasion:o,toLine:t+', הגיעה אליך חבילה',tag:'ל'+t+(f?', מ'+f:''),
     headline:(HEADS[o]||'זה בשבילך, {t}').replace('{t}',t),message:d.m||'',signature:f?'באהבה, '+f:'',
     insideLabel:'בתוך החבילה',ideaLabel:'איך מתחילים:',apps,footer:'רוצים לשלוח מתנה כזו למישהו? למדף המתנות',footerHref:'./'};
 }catch(e){
