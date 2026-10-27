@@ -9,6 +9,6 @@ if 'tools' in g:
 
 t=open(os.path.join(here,'template.html')).read()
 og=f'<title>{html.escape(g["title"])}</title>\n<meta property="og:title" content="{html.escape(g["title"])}">\n<meta property="og:description" content="{html.escape(g["ogDesc"])}">\n<meta name="description" content="{html.escape(g["ogDesc"])}">'
-t=t.replace('<!--OG-->',og).replace('/*GIFT*/','const GIFT='+json.dumps(g,ensure_ascii=False)+';')
+t=t.replace('OGIMG',{'box':'og.png','balloons':'og-balloons.png','flowers':'og-flowers.png'}.get(g.get('skin','box'),'og.png')).replace('<!--OG-->',og).replace('/*GIFT*/','const GIFT='+json.dumps(g,ensure_ascii=False)+';')
 open(os.path.join(here,g['file']),'w').write(t)
 print('wrote',g['file'])

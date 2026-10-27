@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <!--OG-->
-<meta property="og:image" content="https://boazbareket1.github.io/bediyuk-baerech/matana/og.png">
+<meta property="og:image" content="https://boazbareket1.github.io/bediyuk-baerech/matana/OGIMG">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:type" content="website">
@@ -25,6 +25,27 @@
 :root[data-theme="dark"]{
   --paper:#171C1E; --pattern:#20282B; --wrap:#2E6B80; --wrap-2:#3A7C92; --ribbon:#E9785A; --ribbon-dk:#C25D40;
   --card:#22292C; --ink:#EDE6DA; --ink-2:#A9B3B3; --line:#344044; --gold:#E2B858; color-scheme:dark}
+/* skins: balloons and flowers override the wrapping colors (light and dark) */
+html[data-skin="balloons"]{--paper:#FBF1EE;--pattern:#F1DCD6;--wrap:#E0A33A;--wrap-2:#EBBA5E;--ribbon:#C93F6B;--ribbon-dk:#A12F55}
+html[data-skin="flowers"]{--paper:#EEF2EA;--pattern:#DCE4D5;--wrap:#6E9473;--wrap-2:#86AB8B;--ribbon:#C7647F;--ribbon-dk:#A24C66}
+@media (prefers-color-scheme: dark){
+ html[data-skin="balloons"]:not([data-theme="light"]){--paper:#201719;--pattern:#2C2023;--wrap:#C98D2A;--wrap-2:#D9A346;--ribbon:#E66A92;--ribbon-dk:#E66A92}
+ html[data-skin="flowers"]:not([data-theme="light"]){--paper:#151B17;--pattern:#202923;--wrap:#5E8463;--wrap-2:#739A78;--ribbon:#E08AA2;--ribbon-dk:#E08AA2}}
+html[data-theme="dark"][data-skin="balloons"]{--paper:#201719;--pattern:#2C2023;--wrap:#C98D2A;--wrap-2:#D9A346;--ribbon:#E66A92;--ribbon-dk:#E66A92}
+html[data-theme="dark"][data-skin="flowers"]{--paper:#151B17;--pattern:#202923;--wrap:#5E8463;--wrap-2:#739A78;--ribbon:#E08AA2;--ribbon-dk:#E08AA2}
+.deco{position:absolute;inset:0;pointer-events:none;z-index:6}
+.bal{position:absolute;bottom:88%;width:54px;height:66px;border-radius:50% 50% 48% 48%/55% 55% 45% 45%;transition:transform 1.4s cubic-bezier(.3,.6,.3,1),opacity 1.4s}
+.bal::after{content:"";position:absolute;top:100%;left:50%;width:1.5px;height:70px;background:var(--ink-2);opacity:.5}
+.bal.b1{right:-6%;background:#C93F6B;transform:rotate(8deg)}.bal.b2{right:30%;bottom:104%;background:#3F8FB7;width:60px;height:72px}.bal.b3{left:-4%;background:#E0A33A;transform:rotate(-8deg)}
+.parcel.open .bal{transform:translateY(-480px) rotate(0);opacity:0}
+.fl{position:absolute;width:20px;height:20px;border-radius:50%;background:#F2C14E;top:-4%;
+  box-shadow:0 -17px 0 -3px var(--fc),0 17px 0 -3px var(--fc),17px 0 0 -3px var(--fc),-17px 0 0 -3px var(--fc),12px 12px 0 -3px var(--fc),-12px -12px 0 -3px var(--fc),12px -12px 0 -3px var(--fc),-12px 12px 0 -3px var(--fc);transition:transform 1s,opacity 1s}
+.fl.f1{--fc:#E8A0B4;right:6%}.fl.f2{--fc:#F4F0E8;right:62%;top:-10%}.fl.f3{--fc:#B9A3D9;left:8%;top:-2%}
+.leaf{position:absolute;top:2%;width:26px;height:12px;background:#4F7A55;border-radius:0 100% 0 100%}
+.leaf.l1{right:16%;transform:rotate(-30deg)}.leaf.l2{left:20%;transform:rotate(200deg)}
+.parcel.open .fl,.parcel.open .leaf{transform:translateY(-120px) scale(1.4);opacity:0}
+html[data-skin="flowers"] .bow,html[data-skin="balloons"] .bow{display:none}
+html[data-skin="balloons"] .parcel{margin-top:96px}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html,body{margin:0;min-height:100%;background:var(--paper);color:var(--ink)}
@@ -84,7 +105,7 @@ footer{font-size:13px;color:var(--ink-2);text-align:center}
   <p class="to" id="to"></p>
   <button class="parcel" id="parcel" aria-label="לפתוח את המתנה">
     <span class="bow"></span><span class="lid"></span><span class="rib-v"></span><span class="rib-h"></span><span class="box"></span>
-    <span class="tag" id="tag"></span>
+    <span class="tag" id="tag"></span><span class="deco" id="deco" aria-hidden="true"></span>
   </button>
   <button class="cta" id="openBtn">לפתוח את המתנה</button>
   <p class="hint" id="hint">אפשר גם ללחוץ על החבילה</p>
@@ -95,6 +116,8 @@ footer{font-size:13px;color:var(--ink-2);text-align:center}
 /*GIFT*/
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 document.title=GIFT.title;
+const SKIN=['box','balloons','flowers'].includes(GIFT.skin)?GIFT.skin:'box';document.documentElement.dataset.skin=SKIN;
+document.getElementById('deco').innerHTML=SKIN==='balloons'?'<i class="bal b1"></i><i class="bal b2"></i><i class="bal b3"></i>':SKIN==='flowers'?'<i class="leaf l1"></i><i class="leaf l2"></i><i class="fl f1"></i><i class="fl f2"></i><i class="fl f3"></i>':'';
 document.getElementById('to').innerHTML=`<small>${esc(GIFT.occasion)}</small>${esc(GIFT.toLine)}`;
 document.getElementById('tag').textContent=GIFT.tag;
 function open(){
