@@ -218,13 +218,39 @@ window.GIFT_TOOLS = [
   "idea": ""
  }
 ];
-window.giftEncode = function(obj){
-  const bytes = new TextEncoder().encode(JSON.stringify(obj)); let bin = "";
-  bytes.forEach(b => bin += String.fromCharCode(b));
+/* Append-only: gift links store tools by their position here. Never reorder or remove. */
+window.GIFT_CODES = ["beat-it-notes", "bediyuk-baerech", "chakra-compass", "core-theme", "emotion-combo", "emotion-toolbox", "family-weave", "fill-drill", "fruty-beat", "grapholog", "loop-lab", "maagal-hagashama", "mah-korgesh", "mazalot", "meeting-sync", "numerology", "oganim", "politikalpi", "qualitystars", "shminiot", "tanpura-stage", "tmvmc6gjy", "tsmatei-bechira", "values-galaxy"];
+window.GIFT_OCC = ["יום הולדת","תודה","חג","מזל טוב","סתם כי בא לי","מתנה"];
+window.GIFT_SKINS = ["box","balloons","flowers"];
+window.giftEncode = function(obj){ /* compact v1: Hebrew letters as single bytes; falls back to JSON */
+  const CODES=window.GIFT_CODES, OCC=window.GIFT_OCC, SK=window.GIFT_SKINS;
+  const ti=(obj.a||[]).map(id=>CODES.indexOf(id)), oi=OCC.indexOf(obj.o||''), si=SK.indexOf(obj.s||'box');
+  let bytes;
+  if(ti.every(i=>i>=0)&&oi>=0&&si>=0&&ti.length<16){
+    const out=[1,(ti.length<<4)|(si<<2)|0, oi, ...ti];
+    for(const str of [obj.t||'',obj.f||'',obj.m||'']){
+      for(const ch of str){const c=ch.codePointAt(0);
+        if(c>=0x5D0&&c<=0x5EA)out.push(0x80+(c-0x5D0));
+        else if(c>0&&c<0x80)out.push(c);
+        else{const u=ch.length===2?[ch.charCodeAt(0),ch.charCodeAt(1)]:[c];for(const x of u)out.push(0xFE,x>>8,x&255)}}
+      out.push(0)}
+    bytes=Uint8Array.from(out);
+  } else bytes=new TextEncoder().encode(JSON.stringify(obj));
+  let bin="";bytes.forEach(b=>bin+=String.fromCharCode(b));
   return btoa(bin).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
 };
 window.giftDecode = function(s){
-  s = s.replace(/-/g,"+").replace(/_/g,"/"); while (s.length % 4) s += "=";
-  const bin = atob(s); const bytes = Uint8Array.from(bin, c => c.charCodeAt(0));
-  return JSON.parse(new TextDecoder().decode(bytes));
+  s=s.replace(/-/g,"+").replace(/_/g,"/");while(s.length%4)s+="=";
+  const b=Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+  if(b[0]!==1)return JSON.parse(new TextDecoder().decode(b));
+  const n=b[1]>>4,si=(b[1]>>2)&3,oi=b[2],a=[];let p=3;
+  for(let i=0;i<n;i++)a.push(window.GIFT_CODES[b[p++]]);
+  const strs=[];
+  for(let k=0;k<3;k++){let units=[];
+    while(p<b.length&&b[p]!==0){const x=b[p];
+      if(x===0xFE){units.push((b[p+1]<<8)|b[p+2]);p+=3}
+      else if(x>=0x80&&x<=0x9A){units.push(0x5D0+x-0x80);p++}
+      else{units.push(x);p++}}
+    p++;strs.push(String.fromCharCode(...units))}
+  return {t:strs[0],f:strs[1],m:strs[2],o:window.GIFT_OCC[oi],s:window.GIFT_SKINS[si],a:a.filter(Boolean)};
 };
