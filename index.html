@@ -165,7 +165,15 @@ const API='https://he.wikipedia.org/w/api.php';
 const LS_GAME='bediyuk-baerech.game.v1', LS_BOARD='bediyuk-baerech.board.v1';
 const LEVELS={kids:'ילדים (8–12)',teens:'נוער',adults:'מבוגרים'};
 const DOMAINS={mix:'הכול',geo:'גיאוגרפיה',sci:'מדע',art:'אמנות',music:'מוזיקה',hist:'היסטוריה'};
-const CLUE_AT={kids:[0,1,2,3,4],teens:[0,2,4,6,8],adults:[0,3,6,9,12]};
+const DIFFS={easy:'קל',medium:'בינוני',hard:'קשה'};
+const DCFG={
+ easy:  {start:3,step:{kids:1,teens:1,adults:1},gate:{kids:3,teens:2,adults:2},near:4,mark:true,mult:1},
+ medium:{start:2,step:{kids:1,teens:2,adults:2},gate:{kids:2,teens:1,adults:1},near:3,mark:true,mult:1.5},
+ hard:  {start:1,step:{kids:2,teens:3,adults:4},gate:{kids:1,teens:1,adults:1},near:2,mark:false,mult:2}};
+const dc=()=>DCFG[S.diff]||DCFG.medium;
+function clueSched(){const c=dc(),st=c.step[S.level]||2;return [0,1,2,3,4].map(i=>i<c.start?0:(i-c.start+1)*st)}
+function compassMode(){return S.diff==='easy'||(S.diff!=='hard'&&S.level==='kids')?'auto':S.diff==='hard'?'paid':'free'}
+function showChoices(wrong){return S.diff==='easy'||(S.diff!=='hard'&&wrong>=2)}
 const TI={};
 const BAD_CAT=/ערכים|דפים|קצרמר|מיזם|ויקינתונים|תבנית|קואורדינטות|שגיאות|ללא/;
 const HEAT=[{t:'קר',c:'--cold'},{t:'פושר',c:'--mild'},{t:'חם',c:'--warm'},{t:'רותח',c:'--hot'},{t:'הגעת!',c:'--found'}];
@@ -210,7 +218,7 @@ const PUZZLES=[
   {t:'קיוטו',al:[],c:['אני עיר עם אלפי מקדשים.','הייתי בירה במשך יותר מאלף שנה.','אצלי אפשר לראות גיישות ושערי טורי כתומים.']}]}
 ];
 
-let S=null, busy=false, timerId=null, setupSel={level:'teens',domain:'mix',n:3};
+let S=null, busy=false, timerId=null, setupSel={level:'kids',domain:'mix',n:3,diff:'easy'};
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
@@ -337,10 +345,10 @@ async function newGame(name){
   for(const pc of chosen){
     let title=null;try{title=await resolveTitle([pc.t,...pc.al])}catch(e){lastErr=lastErr||e.message}
     if(!title&&!lastErr)lastErr='title not found: '+pc.t;
-    if(title)pieces.push({t:pc.t,al:pc.al,c:pc.c,title,solved:false,stations:0,shown:1,bought:0,wrong:0,extract:''});
+    if(title)pieces.push({t:pc.t,al:pc.al,c:pc.c,title,solved:false,stations:0,shown:Math.min(3,(DCFG[setupSel.diff]||DCFG.medium).start),bought:0,wrong:0,extract:''});
   }
   if(pieces.length<2){$('#app').innerHTML='<div class="setup"><div class="card"><h2>לא הצלחתי להתחבר לוויקיפדיה</h2><p>בדוק את החיבור לאינטרנט ונסה שוב. אם פתחת את הקובץ מתוך תצוגה מקדימה, הורד אותו ופתח אותו בדפדפן.</p><p class="label" dir="ltr" style="text-align:left">'+esc(lastErr||'no error captured')+'</p><button class="primary" onclick="renderSetup()">חזרה</button></div></div>';return}
-  S={v:1,name,level:setupSel.level,domain:setupSel.domain,puzzleId:P.id,pieces,cur:0,phase:'start',article:null,history:[],stations:0,moves:0,gatesOk:0,gatesBad:0,timeMs:0,heat:0,metaWrong:0,metaHints:0,metaSolved:false,gaveUp:false,startPick:null};
+  S={v:1,name,level:setupSel.level,diff:setupSel.diff,domain:setupSel.domain,puzzleId:P.id,pieces,cur:0,phase:'start',article:null,history:[],stations:0,moves:0,gatesOk:0,gatesBad:0,timeMs:0,heat:0,metaWrong:0,metaHints:0,metaSolved:false,gaveUp:false,startPick:null};
   save();renderStart();
 }
 const puzzle=()=>PUZZLES.find(p=>p.id===S.puzzleId);
@@ -350,7 +358,7 @@ const piece=()=>S.pieces[S.cur];
 function renderStats(){
   const st=$('#stats'),hb=$('#heatBox');
   if(!S||S.phase==='done'){st.innerHTML='';hb.hidden=true;return}
-  st.innerHTML=`<span>${esc(S.name)}</span><span>חלק <b>${Math.min(S.cur+1,S.pieces.length)}/${S.pieces.length}</b></span><span>תחנות <b>${S.stations}</b></span><span>זמן <b id="clock">${fmtTime(S.timeMs)}</b></span>`;
+  st.innerHTML=`<span>${esc(S.name)}</span><span>${DIFFS[S.diff]||''}</span><span>חלק <b>${Math.min(S.cur+1,S.pieces.length)}/${S.pieces.length}</b></span><span>תחנות <b>${S.stations}</b></span><span>זמן <b id="clock">${fmtTime(S.timeMs)}</b></span>`;
   hb.hidden=S.phase!=='play';
   if(S.phase==='play')setHeat(S.heat,true);
 }
@@ -375,6 +383,7 @@ function renderSetup(){
     <div class="field"><label class="label" for="nameIn">שם השחקן</label><input id="nameIn" maxlength="24" placeholder="בועז" value="${esc((saved&&saved.name)||'')}"><div class="err" id="nameErr"></div></div>
     <div class="field"><span class="label">גיל</span><div class="chips" id="lvlChips">${Object.entries(LEVELS).map(([k,v])=>`<button class="chip" data-k="${k}" aria-pressed="${setupSel.level===k}">${v}</button>`).join('')}</div></div>
     <div class="field"><span class="label">תחום</span><div class="chips" id="domChips">${Object.entries(DOMAINS).map(([k,v])=>`<button class="chip" data-k="${k}" aria-pressed="${setupSel.domain===k}">${v}</button>`).join('')}</div></div>
+    <div class="field"><span class="label">רמת קושי</span><div class="chips" id="difChips">${Object.entries(DIFFS).map(([k,v])=>`<button class="chip" data-k="${k}" aria-pressed="${setupSel.diff===k}">${v}</button>`).join('')}</div><div class="label" id="difNote"></div></div>
     <div class="field"><span class="label">כמה ערכים נסתרים בחידה</span><div class="chips" id="nChips">${[2,3,4].map(n=>`<button class="chip" data-k="${n}" aria-pressed="${setupSel.n===n}">${n}</button>`).join('')}</div></div>
     <div class="err" id="setupErr"></div>
     <div><button class="primary" id="goBtn">להתחיל חידה חדשה</button></div>
@@ -382,7 +391,7 @@ function renderSetup(){
   <div class="card"><h3 style="margin-bottom:8px">איך משחקים</h3><ol class="rules">
     <li>מקבלים רמז ראשון לערך נסתר, ובוחרים תחנת זינוק מתוך רשימה.</li>
     <li>קוראים את הערך ובוחרים קישור כדי להמשיך. לפני היציאה מגיע "שער": משפט מהפסקה עם מילה חסרה. טעות עולה תחנה.</li>
-    <li>מד החום מראה עד כמה הערך הנוכחי קרוב ליעד. כמעט בכל תחנה נחשף רמז נוסף, עד חמישה רמזים.</li>
+    <li>מד החום מראה עד כמה הערך הנוכחי קרוב ליעד. ככל שמתקדמים נחשפים רמזים נוספים, עד חמישה. בכמה מהר? זה תלוי ברמת הקושי.</li>
     <li>נתקעתם? המצפן מסמן בדף את הקישורים שמובילים לכיוון היעד. אצל ילדים הוא פועל לבד.</li>
     <li>חושבים שהבנתם? מנחשים. אחרי שכל הערכים הנסתרים נחשפו, פותרים את החידה הגדולה שמחברת ביניהם.</li>
     <li>מעט תחנות, מעט רמזים קנויים ושערים נכונים מביאים ניקוד גבוה. ההתקדמות נשמרת, ואפשר להמשיך מתי שרוצים.</li>
@@ -390,7 +399,9 @@ function renderSetup(){
   ${lb.length?`<div class="card"><h3 style="margin-bottom:8px">הטובים ביותר במכשיר הזה</h3>${boardTable(lb)}</div>`:''}
   </div>`;
   const bindChips=(id,key,num)=>$(id).addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b)return;setupSel[key]=num?+b.dataset.k:b.dataset.k;$(id).querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed',c===b));$('#setupErr').textContent=''});
-  bindChips('#lvlChips','level');bindChips('#domChips','domain');bindChips('#nChips','n',true);
+  bindChips('#lvlChips','level');bindChips('#domChips','domain');bindChips('#nChips','n',true);bindChips('#difChips','diff');
+  const DN={easy:'שלושה רמזים כבר בהתחלה, מצפן שעובד לבד, וניחוש מתוך ארבע אפשרויות.',medium:'שני רמזים בהתחלה, מצפן בחינם, ואפשרויות בחירה אחרי שני ניחושים שגויים.',hard:'רמז אחד בהתחלה, מצפן בתשלום נקודות, ורק ניחוש חופשי. ניקוד כפול.'};
+  const dn=()=>$('#difNote').textContent=DN[setupSel.diff];dn();$('#difChips').addEventListener('click',dn);
   $('#nameIn').addEventListener('input',()=>$('#nameErr').textContent='');
   $('#goBtn').onclick=()=>{
     const name=$('#nameIn').value.trim();
@@ -404,7 +415,7 @@ function renderSetup(){
   }
 }
 function boardTable(rows){
-  return `<div style="overflow-x:auto"><table class="board"><thead><tr><th>#</th><th>שחקן</th><th>חידה</th><th>ניקוד</th><th>תחנות</th><th>זמן</th></tr></thead><tbody>${rows.map((r,i)=>`<tr><td>${i+1}</td><td>${esc(r.name)}</td><td>${esc(r.answer)}</td><td><b>${r.score}</b></td><td>${r.stations}</td><td>${fmtTime(r.time)}</td></tr>`).join('')}</tbody></table></div>`;
+  return `<div style="overflow-x:auto"><table class="board"><thead><tr><th>#</th><th>שחקן</th><th>חידה</th><th>רמה</th><th>ניקוד</th><th>תחנות</th><th>זמן</th></tr></thead><tbody>${rows.map((r,i)=>`<tr><td>${i+1}</td><td>${esc(r.name)}</td><td>${esc(r.answer)}</td><td>${(LEVELS[r.level]||'').split(' ')[0]} · ${DIFFS[r.diff]||''}</td><td><b>${r.score}</b></td><td>${r.stations}</td><td>${fmtTime(r.time)}</td></tr>`).join('')}</tbody></table></div>`;
 }
 function resume(){
   startTimer();
@@ -421,7 +432,7 @@ function renderStart(){
   if(!S.startPick){
     $('#app').innerHTML='<div class="loading">מכין תחנות זינוק…</div>';
     targetInfo(p.title).then(info=>{
-      const near=shuffle([...info.out].filter(t=>/^[\u05D0-\u05EA]/.test(t)&&t.length<=24&&!/\d/.test(t)&&!targets.has(norm(t)))).slice(0,S.level==='adults'?2:3);
+      const near=shuffle([...info.out].filter(t=>/^[\u05D0-\u05EA]/.test(t)&&t.length<=24&&!/\d/.test(t)&&!targets.has(norm(t)))).slice(0,dc().near);
       S.nearPick=near;
       S.startPick=shuffle([...near,...shuffle(START_POOL.filter(t=>!targets.has(norm(t))&&!near.includes(t))).slice(0,12-near.length)]);
       renderStart();
@@ -431,10 +442,10 @@ function renderStart(){
   save();
   $('#app').innerHTML=`<div class="pick">
     <div><span class="stamp">ערך נסתר ${S.cur+1} מתוך ${S.pieces.length}</span></div>
-    <div class="clue-hero">${esc(p.c[0])}</div>
+    ${Array.from({length:Math.min(3,p.shown||1)},(_,i)=>`<div class="clue-hero">${esc(p.c[i])}</div>`).join('')}
     <p style="margin:0;color:var(--ink-2)">${S.cur===0?'מאיפה תתחיל? בחר תחנת זינוק. תחנה שנראית קשורה לרמז יכולה לחסוך דרך.':'אפשר להמשיך מהערך שבו עצרת, או לקפוץ לתחנה חדשה.'}</p>
     ${S.cur>0&&S.article?`<div><button class="primary" id="contBtn">להמשיך מ"${esc(S.article)}"</button></div>`:''}
-    <div class="stations" id="stList">${S.startPick.map(t=>`<button data-t="${esc(t)}">${esc(t)}${S.level!=='adults'&&(S.nearPick||[]).includes(t)?'<span class="near">קרוב ליעד</span>':''}</button>`).join('')}</div>
+    <div class="stations" id="stList">${S.startPick.map(t=>`<button data-t="${esc(t)}">${esc(t)}${dc().mark&&(S.nearPick||[]).includes(t)?'<span class="near">קרוב ליעד</span>':''}</button>`).join('')}</div>
     <div><button class="ghost" id="reshuf">ערבב תחנות</button></div>
   </div>`;
   $('#stList').onclick=e=>{const b=e.target.closest('button');if(!b)return;beginAt(b.dataset.t,b)};
@@ -463,20 +474,26 @@ function renderPlayShell(){
   $('#backBtn').onclick=()=>{if(S.history.length<2||busy)return;const prev=S.history[S.history.length-2];S.history.pop();loadArticle(prev,{count:true,noHistory:true})};
   renderSide();
 }
-function nextClueIn(p){const sched=CLUE_AT[S.level];if(p.shown>=clueCount(p))return null;return Math.max(0,sched[p.shown]-p.stations)}
+function nextClueIn(p){const sched=clueSched();if(p.shown>=clueCount(p))return null;return Math.max(0,sched[p.shown]-p.stations)}
 function letterHint(p){const b=base(p.title);const words=b.split(/\s+/).length;return `מתחיל באות "${b[0]}", ${b.replace(/[\s'"׳״-]/g,'').length} אותיות${words>1?`, ${words} מילים`:''}.`}
 function clueCount(p){return (TI[p.title]&&TI[p.title].cat)?5:4}
 function clueText(p,i){if(i<3)return p.c[i];const cat=TI[p.title]&&TI[p.title].cat;if(i===3&&cat)return `בוויקיפדיה היעד שייך לנושא: "${cat}".`;return letterHint(p)}
-function updateClues(p){const n=CLUE_AT[S.level].filter(x=>p.stations>=x).length;const mx=clueCount(p);if(n>p.shown&&p.shown<mx){p.shown=Math.min(mx,n);toast('רמז חדש נחשף')}}
+function updateClues(p){const n=clueSched().filter(x=>p.stations>=x).length;const mx=clueCount(p);if(n>p.shown&&p.shown<mx){p.shown=Math.min(mx,n);toast('רמז חדש נחשף')}}
 function compassHtml(p){
-  const here=p.compassAt===S.article,auto=S.level==='kids';
+  const here=p.compassAt===S.article,mode=compassMode(),auto=mode==='auto';
   let h='';
   if(here){
     h+=(p.warm&&p.warm.length)?`<div class="label">קישורים בדף הזה שמובילים לכיוון היעד (מסומנים בכתום). לחיצה מקפיצה אל הקישור בטקסט, כדי לקרוא את ההקשר:</div><div class="warmlist" id="warmList">${p.warm.slice(0,8).map(t=>`<button data-t="${esc(t)}">${esc(t)}</button>`).join('')}</div>`
       :`<div class="label">אין בדף הזה קישור שמוביל ישר לכיוון היעד. כדאי לחזור אחורה, או לבחור קישור כללי יותר (מדינה, תקופה, תחום).</div>`;
-  }else h+=auto?`<div id="compassOut"><span class="label">המצפן מחפש…</span></div>`:`<div id="compassOut" class="label">המצפן מסמן בדף את הקישורים שקרובים ליעד.</div><div><button class="ghost" id="compassBtn">להפעיל מצפן (3- נקודות)</button></div>`;
+  }else h+=auto?`<div id="compassOut"><span class="label">המצפן מחפש…</span></div>`:`<div id="compassOut" class="label">המצפן מסמן בדף את הקישורים שקרובים ליעד.</div><div><button class="ghost" id="compassBtn">${mode==='paid'?'להפעיל מצפן (3- נקודות)':'להפעיל מצפן'}</button></div>`;
   if((S.coldStreak||0)>=3)h+=`<div class="label" style="color:var(--cold)">כבר ${S.coldStreak} תחנות שקר. נסו לחזור אחורה או להיעזר במצפן.</div>`;
   return h;
+}
+function choicePool(){return PUZZLES.flatMap(z=>z.pieces.map(x=>x.t))}
+function choicesHtml(p){
+  if(!showChoices(p.wrong))return '';
+  if(!p.mc){const me=norm(p.t);p.mc=shuffle([p.t,...shuffle(choicePool().filter(t=>norm(t)!==me&&!S.pieces.some(q=>norm(q.t)===norm(t)))).slice(0,3)]);p.mcOut=[];save()}
+  return `<div class="label">${S.diff==='easy'?'או בחר מתוך האפשרויות:':'רוצה עזרה? בחר מתוך האפשרויות:'}</div><div class="opts" id="mcOpts">${p.mc.map(t=>`<button data-t="${esc(t)}" ${(p.mcOut||[]).includes(t)?'class="wrong" disabled':''}>${esc(t)}</button>`).join('')}</div>`;
 }
 function renderSide(){
   const p=piece(),side=$('#side');if(!side||!p)return;
@@ -490,16 +507,19 @@ function renderSide(){
    <div class="note"><h3>מצפן</h3>${compassHtml(p)}</div>
    <div class="note"><label class="label" for="guessIn">חושב שהבנת?</label>
      <div class="row"><input id="guessIn" placeholder="שם הערך הנסתר" autocomplete="off"><button class="primary" id="guessBtn">לנחש</button></div>
-     <div class="err" id="guessErr"></div><div class="label">ניחוש שגוי עולה 2 תחנות.</div></div>
+     <div class="err" id="guessErr"></div>${choicesHtml(p)}<div class="label">ניחוש שגוי עולה 2 תחנות.</div></div>
    <div class="note"><div class="label">חלקי החידה</div><div class="pieces">${S.pieces.map((x,i)=>`<span class="piece ${x.solved?'done':i===S.cur?'now':''}">${x.solved?esc(base(x.title)):i===S.cur?'מחפש…':'?'}</span>`).join('')}</div>
      ${path.length?`<div class="label">המסלול שלך</div><div class="path">${S.history.length>8?'… ← ':''}${path.map((t,i)=>i===path.length-1?`<b>${esc(t)}</b>`:esc(t)).join(' ← ')}</div>`:''}
      <div><button class="ghost" id="homeBtn">שמור וצא</button></div></div>`;
   const bb=$('#buyBtn');if(bb)bb.onclick=()=>{p.shown++;p.bought++;save();renderSide()};
-  const cbn=$('#compassBtn');if(cbn)cbn.onclick=()=>runCompass(true);
+  const cbn=$('#compassBtn');if(cbn)cbn.onclick=()=>runCompass(compassMode()==='paid');
   const wl=$('#warmList');if(wl)wl.onclick=e=>{const b=e.target.closest('button');if(!b)return;const a=[...document.querySelectorAll('#article a.wl')].find(x=>x.dataset.wt===b.dataset.t);if(a){a.scrollIntoView({block:'center',behavior:'smooth'});a.focus()}};
   const gi=$('#guessIn');gi.addEventListener('input',()=>$('#guessErr').textContent='');
   gi.addEventListener('keydown',e=>{if(e.key==='Enter')guess()});
   $('#guessBtn').onclick=guess;
+  const mo=$('#mcOpts');if(mo)mo.onclick=e=>{const b=e.target.closest('button');if(!b||b.disabled)return;
+    if(norm(b.dataset.t)===norm(p.t)){b.classList.add('right');setTimeout(()=>solvePiece(false),400)}
+    else{p.mcOut=[...(p.mcOut||[]),b.dataset.t];p.wrong++;p.stations+=2;S.stations+=2;updateClues(p);save();renderStats();renderSide();$('#guessErr').textContent='לא זה. נסו שוב.'}};
   $('#homeBtn').onclick=()=>{save();renderSetup()};
 }
 function guess(){
@@ -526,7 +546,7 @@ async function loadArticle(title,{count=true,noHistory=false}={}){
   targetInfo(p.title).then(()=>{if(piece()===p&&S.phase==='play')renderSide()});
   measureHeat(real,art.textContent);
   markWarm();
-  if(S.level==='kids'&&p.compassAt!==real)runCompass(false);
+  if(compassMode()==='auto'&&p.compassAt!==real)runCompass(false);
   return true;
 }
 async function measureHeat(A,text){
@@ -564,7 +584,7 @@ function buildGate(a){
   if(S.level==='kids'){const nums=cand.filter(x=>/^\d/.test(x.w));const mid=cand.filter(x=>x.w.length>=3&&x.w.length<=6);pick=(nums.length?nums:mid.length?mid:cand)[Math.floor(Math.random()*(nums.length?nums.length:mid.length?mid.length:cand.length))]}
   else if(S.level==='adults'){pick=cand.slice().sort((x,y)=>y.w.length-x.w.length)[0]}
   else pick=cand[Math.floor(Math.random()*cand.length)];
-  const ans=pick.w,isNum=/^\d/.test(ans),nOpt=S.level==='kids'?2:3;
+  const ans=pick.w,isNum=/^\d/.test(ans),nOpt=(S.level==='kids'||S.diff==='easy')?2:3;
   const pool=($('#article').textContent.match(isNum?/\b\d{2,4}\b/g:/[\u05D0-\u05EA][\u05D0-\u05EA'״׳"-]{2,}/g)||[]).map(cleanTok).filter(w=>w&&w!==ans&&!STOPW.has(w)&&!sent.includes(w));
   let opts=[...new Set(pool.filter(w=>Math.abs(w.length-ans.length)<=2))];
   opts=shuffle(opts).slice(0,nOpt);
@@ -577,7 +597,7 @@ function buildGate(a){
 function onLink(a){
   if(busy)return;const t=a.dataset.wt;if(!t)return;
   S.moves++;
-  const need=S.level==='kids'?S.moves%2===0:true;
+  const ge=dc().gate[S.level]||1,need=S.moves%ge===0;
   const g=need?buildGate(a):null;
   if(!g){loadArticle(t);return}
   const m=document.createElement('div');m.className='shade';
@@ -605,6 +625,10 @@ async function solvePiece(arrived){
   $('#modalRoot').appendChild(m);$('#nextBtn').focus();
   $('#nextBtn').onclick=()=>{m.remove();if(last){S.phase='meta';save();renderMeta()}else{S.cur++;S.heat=0;S.startPick=null;save();renderStart()}};
 }
+function metaChoices(P){
+  if(!S.metaMc){S.metaMc=shuffle([P.meta.a,...shuffle(PUZZLES.filter(z=>z.id!==P.id).map(z=>z.meta.a)).slice(0,3)]);S.metaOut=[];save()}
+  return S.metaMc;
+}
 function renderMeta(){
   S.phase='meta';renderStats();startTimer();
   const P=puzzle(),ans=base(P.meta.a);
@@ -617,12 +641,16 @@ function renderMeta(){
       <div class="label">התשובה</div><div style="font-family:var(--font-read);font-size:24px;letter-spacing:.06em" dir="rtl">${letters}</div>
       <div class="row"><input id="metaIn" placeholder="הפתרון" autocomplete="off"><button class="primary" id="metaBtn">לפתור</button></div>
       <div class="err" id="metaErr"></div>
+      ${showChoices(S.metaWrong)?`<div class="label">או בחר מתוך האפשרויות:</div><div class="opts" id="metaOpts">${metaChoices(P).map(t=>`<button data-t="${esc(t)}" ${(S.metaOut||[]).includes(t)?'class="wrong" disabled':''}>${esc(t)}</button>`).join('')}</div>`:''}
       <div class="row"><button class="ghost" id="hintBtn">לחשוף אות (10- נקודות)</button><button class="ghost" id="giveBtn">לוותר ולראות</button></div>
     </div></div>`;
   const inp=$('#metaIn');inp.focus();inp.addEventListener('input',()=>$('#metaErr').textContent='');
   const go=()=>{const v=inp.value.trim();if(!v){$('#metaErr').textContent='כתוב פתרון קודם';return}
     if(normSet([P.meta.a,...P.meta.al]).has(norm(v))){S.metaSolved=true;finish()}
-    else{S.metaWrong++;save();$('#metaErr').textContent='עדיין לא. מה משותף לכל הערכים?'}};
+    else{S.metaWrong++;save();if(showChoices(S.metaWrong)&&!$('#metaOpts'))renderMeta();$('#metaErr').textContent='עדיין לא. מה משותף לכל הערכים?'}};
+  const mo=$('#metaOpts');if(mo)mo.onclick=e=>{const b=e.target.closest('button');if(!b||b.disabled)return;
+    if(b.dataset.t===P.meta.a){b.classList.add('right');S.metaSolved=true;setTimeout(finish,500)}
+    else{S.metaWrong++;S.metaOut=[...(S.metaOut||[]),b.dataset.t];save();renderMeta();$('#metaErr').textContent='עדיין לא. מה משותף לכל הערכים?'}};
   inp.addEventListener('keydown',e=>{if(e.key==='Enter')go()});$('#metaBtn').onclick=go;
   $('#hintBtn').onclick=()=>{if(S.metaHints<ans.replace(/\s/g,'').length-1){S.metaHints++;save();renderMeta()}};
   $('#giveBtn').onclick=()=>{S.gaveUp=true;finish()};
@@ -630,12 +658,14 @@ function renderMeta(){
 function computeScore(){
   const solved=S.pieces.filter(p=>p.solved).length,bought=S.pieces.reduce((a,p)=>a+p.bought,0),wrong=S.pieces.reduce((a,p)=>a+p.wrong,0);
   const parts=[['ערכים שפוצחו',solved*100],['תחנות',-2*S.stations],['רמזים שנקנו',-3*bought],['מצפן',-3*(S.compass||0)],['ניחושים שגויים',-3*wrong],['שערים נכונים',3*S.gatesOk],['החידה הגדולה',S.metaSolved?60:0],['אותיות שנחשפו',-10*S.metaHints],['ניסיונות שגויים בחידה',-5*S.metaWrong]];
-  return {parts,total:Math.max(0,parts.reduce((a,x)=>a+x[1],0))};
+  const sum=Math.max(0,parts.reduce((a,x)=>a+x[1],0)),m=dc().mult;
+  if(m!==1)parts.push([`מכפיל רמה (${DIFFS[S.diff]}) ×${m}`,Math.round(sum*m)-sum]);
+  return {parts,total:Math.round(sum*m)};
 }
 function finish(){
   S.phase='done';clearInterval(timerId);
   const sc=computeScore(),P=puzzle();
-  const entry={name:S.name,answer:base(P.meta.a),score:sc.total,stations:S.stations,time:S.timeMs,level:S.level,date:new Date().toISOString().slice(0,10)};
+  const entry={name:S.name,answer:base(P.meta.a),score:sc.total,stations:S.stations,time:S.timeMs,level:S.level,diff:S.diff||'medium',date:new Date().toISOString().slice(0,10)};
   let b=board();b.push(entry);b.sort((x,y)=>y.score-x.score||x.time-y.time);b=b.slice(0,50);
   try{localStorage.setItem(LS_BOARD,JSON.stringify(b))}catch(e){}
   clearSaved();renderStats();
