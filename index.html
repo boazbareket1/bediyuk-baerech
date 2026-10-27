@@ -130,6 +130,14 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .opts button.right{background:var(--ok-bg);color:var(--ok-fg);border-color:transparent}
 .opts button.wrong{background:var(--bad-bg);color:var(--bad-fg);border-color:transparent}
 .toast{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:10px 18px;border-radius:999px;z-index:60;font-size:15px;max-width:90vw}
+.invite{border:2px solid var(--stamp);background:var(--sheet)}
+.modal .stamp,.invite .stamp{justify-self:start}
+.qrwrap{display:grid;justify-items:center;gap:10px;padding:12px;background:#fff;border-radius:12px}
+.qrwrap img,.qrwrap canvas{width:220px!important;height:220px!important}
+.qrwrap.big img,.qrwrap.big canvas{width:min(78vw,420px)!important;height:min(78vw,420px)!important}
+.linkline{font-family:ui-monospace,Menlo,monospace;font-size:13px;direction:ltr;text-align:left;overflow-wrap:anywhere;background:var(--paper);border-radius:8px;padding:8px 10px}
+a.btnlink{display:inline-flex;align-items:center;text-decoration:none;border-radius:8px;padding:9px 16px;font-weight:500}
+a.wa{background:#1E8E4F;color:#fff}
 /* end */
 .end{max-width:760px;margin:28px auto 0;display:grid;gap:18px}
 .score-big{font-family:var(--font-read);font-size:72px;font-weight:900;line-height:1;color:var(--stamp);font-variant-numeric:tabular-nums}
@@ -160,6 +168,7 @@ table.board th{font-weight:500;color:var(--ink-2);font-size:13px}
 <main class="wrap" id="app"></main>
 <div id="modalRoot"></div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 const API='https://he.wikipedia.org/w/api.php';
 const LS_GAME='bediyuk-baerech.game.v1', LS_BOARD='bediyuk-baerech.board.v1';
@@ -218,6 +227,13 @@ const PUZZLES=[
   {t:'קיוטו',al:[],c:['אני עיר עם אלפי מקדשים.','הייתי בירה במשך יותר מאלף שנה.','אצלי אפשר לראות גיישות ושערי טורי כתומים.']}]}
 ];
 
+function rng(seed){let a=seed>>>0;return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function seededShuffle(arr,seed){const r=rng(seed),a=arr.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+const GAME_URL='https://boazbareket1.github.io/bediyuk-baerech/';
+function parseInvite(){try{const q=new URLSearchParams(location.search),j=q.get('j');if(!j)return null;const [p,level,diff,n,seed]=j.split('.');
+  if(!PUZZLES.some(x=>x.id===p)||!LEVELS[level]||!DIFFS[diff])return null;return {p,level,diff,n:Math.max(2,Math.min(4,+n||3)),seed:+seed||1,h:(q.get('h')||'').slice(0,24)}}catch(e){return null}}
+function inviteUrl(inv,host){return GAME_URL+'?j='+[inv.p,inv.level,inv.diff,inv.n,inv.seed].join('.')+(host?'&h='+encodeURIComponent(host):'')}
+let INVITE=null;
 let S=null, busy=false, timerId=null, setupSel={level:'kids',domain:'mix',n:3,diff:'easy'};
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -334,11 +350,16 @@ function cleanArticle(html){
 
 /* ---------- puzzle setup ---------- */
 function candidatePuzzles(level,domain){return PUZZLES.filter(p=>p.levels.includes(level)&&(domain==='mix'||p.domain===domain))}
-async function newGame(name){
+function pickPuzzle(){
   let list=candidatePuzzles(setupSel.level,setupSel.domain);
   let played=[];try{played=JSON.parse(localStorage.getItem('bediyuk-baerech.played')||'[]')}catch(e){}
   const fresh=list.filter(p=>!played.includes(p.id));if(fresh.length)list=fresh;
-  const P=list[Math.floor(Math.random()*list.length)];
+  return list[Math.floor(Math.random()*list.length)];
+}
+async function newGame(name,inv){
+  if(inv){setupSel.level=inv.level;setupSel.diff=inv.diff;setupSel.n=inv.n}
+  const P=inv?PUZZLES.find(x=>x.id===inv.p):pickPuzzle();
+  let played=[];try{played=JSON.parse(localStorage.getItem('bediyuk-baerech.played')||'[]')}catch(e){}
   try{played=[...played.filter(x=>x!==P.id),P.id].slice(-20);localStorage.setItem('bediyuk-baerech.played',JSON.stringify(played))}catch(e){}
   $('#app').innerHTML='<div class="loading">מכין את החידה ובודק את הערכים בוויקיפדיה…</div>';
   const chosen=P.pieces.slice(0,setupSel.n);const pieces=[];
@@ -348,7 +369,7 @@ async function newGame(name){
     if(title)pieces.push({t:pc.t,al:pc.al,c:pc.c,title,solved:false,stations:0,shown:Math.min(3,(DCFG[setupSel.diff]||DCFG.medium).start),bought:0,wrong:0,extract:''});
   }
   if(pieces.length<2){$('#app').innerHTML='<div class="setup"><div class="card"><h2>לא הצלחתי להתחבר לוויקיפדיה</h2><p>בדוק את החיבור לאינטרנט ונסה שוב. אם פתחת את הקובץ מתוך תצוגה מקדימה, הורד אותו ופתח אותו בדפדפן.</p><p class="label" dir="ltr" style="text-align:left">'+esc(lastErr||'no error captured')+'</p><button class="primary" onclick="renderSetup()">חזרה</button></div></div>';return}
-  S={v:1,name,level:setupSel.level,diff:setupSel.diff,domain:setupSel.domain,puzzleId:P.id,pieces,cur:0,phase:'start',article:null,history:[],stations:0,moves:0,gatesOk:0,gatesBad:0,timeMs:0,heat:0,metaWrong:0,metaHints:0,metaSolved:false,gaveUp:false,startPick:null};
+  S={v:1,name,level:setupSel.level,diff:setupSel.diff,domain:setupSel.domain,puzzleId:P.id,pieces,cur:0,phase:'start',article:null,history:[],stations:0,moves:0,gatesOk:0,gatesBad:0,timeMs:0,heat:0,metaWrong:0,metaHints:0,metaSolved:false,gaveUp:false,startPick:null,seed:inv?inv.seed:Math.floor(Math.random()*1e9),host:inv?inv.h:''};
   save();renderStart();
 }
 const puzzle=()=>PUZZLES.find(p=>p.id===S.puzzleId);
@@ -372,6 +393,29 @@ function startTimer(){
   timerId=setInterval(()=>{if(!S||document.hidden||!['play','meta','start'].includes(S.phase))return;S.timeMs+=1000;const c=$('#clock');if(c)c.textContent=fmtTime(S.timeMs);if(S.timeMs%5000===0)save()},1000);
 }
 
+/* ---------- invite ---------- */
+function showInvite(inv,host,opt={}){
+  const url=inviteUrl(inv,host);
+  const text=`${host?host+' מזמין אותך':'בואו'} לשחק איתי ב"בדיוק בערך": אותה חידה לכולם, מי מגיע לפתרון עם פחות תחנות?\n${url}`;
+  const m=document.createElement('div');m.className='shade';
+  m.innerHTML=`<div class="modal" role="dialog" aria-modal="true" aria-labelledby="ivH"><span class="stamp">${opt.party?'ערב משחק':'הזמנה'}</span>
+    <h2 id="ivH">${opt.party?'כולם סורקים ומצטרפים':'להזמין חברים לחידה הזאת'}</h2>
+    <p style="margin:0;color:var(--ink-2)">${opt.party?'הצג את הברקוד על המסך או העבר את הטלפון. כל מי שסורק מקבל את אותה חידה בדיוק, ומשחק בטלפון שלו.':'החברים יקבלו את אותה חידה בדיוק: אותם יעדים, אותה רמה ואותן תחנות זינוק.'}</p>
+    <div class="qrwrap" id="qrBox" title="לחיצה מגדילה"></div>
+    <div class="linkline">${esc(url)}</div>
+    <div class="row" style="flex-wrap:wrap"><a class="btnlink wa" href="${esc('https://wa.me/?text='+encodeURIComponent(text))}" target="_blank" rel="noopener">לשלוח בוואטסאפ</a>
+      <button class="ghost" id="ivCopy">להעתיק קישור</button><button class="ghost" id="ivBig">להגדיל ברקוד</button></div>
+    <div class="row">${opt.party?'<button class="primary" id="ivStart">להתחיל לשחק גם אני</button>':''}<button class="ghost" id="ivClose">${opt.party?'ביטול':'סגירה'}</button></div></div>`;
+  $('#modalRoot').appendChild(m);
+  try{new QRCode($('#qrBox'),{text:url,width:420,height:420,colorDark:'#1B2A2E',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M})}catch(e){$('#qrBox').innerHTML='<span class="label">הברקוד לא נטען. אפשר לשלוח את הקישור.</span>'}
+  const big=()=>{const q=$('#qrBox');q.classList.toggle('big');$('#ivBig').textContent=q.classList.contains('big')?'להקטין ברקוד':'להגדיל ברקוד'};
+  $('#ivBig').onclick=big;$('#qrBox').onclick=big;
+  $('#ivCopy').onclick=async e=>{const b=e.currentTarget;try{await navigator.clipboard.writeText(url);b.textContent='הועתק'}catch(err){b.textContent='סמנו את הקישור והעתיקו'}setTimeout(()=>b.textContent='להעתיק קישור',1800)};
+  $('#ivClose').onclick=()=>m.remove();
+  const st=$('#ivStart');if(st)st.onclick=()=>{m.remove();opt.onStart&&opt.onStart()};
+}
+function currentInvite(){return {p:S.puzzleId,level:S.level,diff:S.diff||'medium',n:S.pieces.length,seed:S.seed||1}}
+
 /* ---------- setup screen ---------- */
 function renderSetup(){
   const saved=loadSaved();S=null;renderStats();
@@ -379,14 +423,19 @@ function renderSetup(){
   $('#app').innerHTML=`<div class="setup">
   <div class="hero"><h1>בדיוק <span>בערך</span></h1><p>יעד סודי מסתתר בוויקיפדיה. אתם לא יודעים מה הוא. קוראים, אוספים רמזים, מרגישים מתי מתחממים, ומנחשים. כמה חלקים יחד יוצרים חידה אחת גדולה.</p></div>
   ${saved&&saved.phase!=='done'?`<div class="card resume"><div><div class="label">משחק שמור</div><b>${esc(saved.name)}</b> · חלק ${Math.min(saved.cur+1,saved.pieces.length)} מתוך ${saved.pieces.length} · ${saved.stations} תחנות</div><div class="row"><button class="primary" id="resumeBtn">להמשיך</button><button class="ghost" id="dropBtn">למחוק</button></div></div>`:''}
-  <div class="card" style="display:grid;gap:18px">
+  ${INVITE?`<div class="card invite" style="display:grid;gap:14px"><div><span class="stamp">הזמנה</span></div>
+    <h2 style="font-size:28px">${INVITE.h?esc(INVITE.h)+' מזמין אותך':'הוזמנת'} לשחק באותה חידה</h2>
+    <p style="margin:0;color:var(--ink-2)">כולם מקבלים בדיוק את אותה חידה: ${LEVELS[INVITE.level]}, רמה ${DIFFS[INVITE.diff]}, ${INVITE.n} ערכים נסתרים. כל אחד משחק בטלפון שלו, ובסוף משווים מי פתר עם פחות תחנות.</p>
+    <div class="field"><label class="label" for="invName">השם שלך</label><input id="invName" maxlength="24" placeholder="השם שלך" autocomplete="name"><div class="err" id="invErr"></div></div>
+    <div class="row"><button class="primary" id="joinBtn">להצטרף לחידה</button><button class="ghost" id="leaveInv">לשחק חידה אחרת</button></div></div>`:''}
+  <div class="card" style="display:grid;gap:18px" ${INVITE?'hidden':''}>
     <div class="field"><label class="label" for="nameIn">שם השחקן</label><input id="nameIn" maxlength="24" placeholder="בועז" value="${esc((saved&&saved.name)||'')}"><div class="err" id="nameErr"></div></div>
     <div class="field"><span class="label">גיל</span><div class="chips" id="lvlChips">${Object.entries(LEVELS).map(([k,v])=>`<button class="chip" data-k="${k}" aria-pressed="${setupSel.level===k}">${v}</button>`).join('')}</div></div>
     <div class="field"><span class="label">תחום</span><div class="chips" id="domChips">${Object.entries(DOMAINS).map(([k,v])=>`<button class="chip" data-k="${k}" aria-pressed="${setupSel.domain===k}">${v}</button>`).join('')}</div></div>
     <div class="field"><span class="label">רמת קושי</span><div class="chips" id="difChips">${Object.entries(DIFFS).map(([k,v])=>`<button class="chip" data-k="${k}" aria-pressed="${setupSel.diff===k}">${v}</button>`).join('')}</div><div class="label" id="difNote"></div></div>
     <div class="field"><span class="label">כמה ערכים נסתרים בחידה</span><div class="chips" id="nChips">${[2,3,4].map(n=>`<button class="chip" data-k="${n}" aria-pressed="${setupSel.n===n}">${n}</button>`).join('')}</div></div>
     <div class="err" id="setupErr"></div>
-    <div><button class="primary" id="goBtn">להתחיל חידה חדשה</button></div>
+    <div class="row" style="flex-wrap:wrap"><button class="primary" id="goBtn">להתחיל חידה חדשה</button><button class="ghost" id="partyBtn">ערב משחק: חידה אחת לכולם</button></div>
   </div>
   <div class="card"><h3 style="margin-bottom:8px">איך משחקים</h3><ol class="rules">
     <li>מקבלים רמז ראשון לערך נסתר, ובוחרים תחנת זינוק מתוך רשימה.</li>
@@ -409,6 +458,19 @@ function renderSetup(){
     if(!candidatePuzzles(setupSel.level,setupSel.domain).length){$('#setupErr').textContent='עדיין אין חידה בתחום הזה לגיל הזה. בחר תחום אחר או "הכול".';return}
     newGame(name);
   };
+  $('#partyBtn').onclick=()=>{
+    const name=$('#nameIn').value.trim();
+    if(!name){$('#nameErr').textContent='כתוב שם כדי לפתוח ערב משחק';$('#nameIn').focus();return}
+    if(!candidatePuzzles(setupSel.level,setupSel.domain).length){$('#setupErr').textContent='עדיין אין חידה בתחום הזה לגיל הזה. בחר תחום אחר או "הכול".';return}
+    const P=pickPuzzle(),inv={p:P.id,level:setupSel.level,diff:setupSel.diff,n:setupSel.n,seed:Math.floor(Math.random()*1e9),h:name};
+    showInvite(inv,name,{party:true,onStart:()=>newGame(name,inv)});
+  };
+  if(INVITE){
+    const jn=$('#joinBtn'),ni=$('#invName');try{const last=JSON.parse(localStorage.getItem(LS_GAME)||'null');if(last&&last.name)ni.value=last.name}catch(e){}
+    ni.addEventListener('input',()=>$('#invErr').textContent='');ni.addEventListener('keydown',e=>{if(e.key==='Enter')jn.click()});
+    jn.onclick=()=>{const n=ni.value.trim();if(!n){$('#invErr').textContent='כתוב את השם שלך כדי להצטרף';ni.focus();return}const inv=INVITE;INVITE=null;history.replaceState(null,'',location.pathname);newGame(n,inv)};
+    $('#leaveInv').onclick=()=>{INVITE=null;history.replaceState(null,'',location.pathname);renderSetup()};
+  }
   if(saved&&saved.phase!=='done'){
     $('#resumeBtn').onclick=()=>{S=saved;resume()};
     $('#dropBtn').onclick=()=>{clearSaved();renderSetup()};
@@ -432,9 +494,9 @@ function renderStart(){
   if(!S.startPick){
     $('#app').innerHTML='<div class="loading">מכין תחנות זינוק…</div>';
     targetInfo(p.title).then(info=>{
-      const near=shuffle([...info.out].filter(t=>/^[\u05D0-\u05EA]/.test(t)&&t.length<=24&&!/\d/.test(t)&&!targets.has(norm(t)))).slice(0,dc().near);
+      const near=seededShuffle([...info.out].filter(t=>/^[\u05D0-\u05EA]/.test(t)&&t.length<=24&&!/\d/.test(t)&&!targets.has(norm(t))),(S.seed||1)+S.cur*17).slice(0,dc().near);
       S.nearPick=near;
-      S.startPick=shuffle([...near,...shuffle(START_POOL.filter(t=>!targets.has(norm(t))&&!near.includes(t))).slice(0,12-near.length)]);
+      const sd=(S.seed||1)+S.cur*31+(S.reshuf||0)*101;S.startPick=seededShuffle([...near,...seededShuffle(START_POOL.filter(t=>!targets.has(norm(t))&&!near.includes(t)),sd).slice(0,12-near.length)],sd+7);
       renderStart();
     });
     return;
@@ -449,7 +511,7 @@ function renderStart(){
     <div><button class="ghost" id="reshuf">ערבב תחנות</button></div>
   </div>`;
   $('#stList').onclick=e=>{const b=e.target.closest('button');if(!b)return;beginAt(b.dataset.t,b)};
-  $('#reshuf').onclick=()=>{S.startPick=null;renderStart()};
+  $('#reshuf').onclick=()=>{S.reshuf=(S.reshuf||0)+1;S.startPick=null;renderStart()};
   const cb=$('#contBtn');if(cb)cb.onclick=()=>beginAt(S.article,null);
 }
 async function beginAt(title,btn){
@@ -510,7 +572,7 @@ function renderSide(){
      <div class="err" id="guessErr"></div>${choicesHtml(p)}<div class="label">ניחוש שגוי עולה 2 תחנות.</div></div>
    <div class="note"><div class="label">חלקי החידה</div><div class="pieces">${S.pieces.map((x,i)=>`<span class="piece ${x.solved?'done':i===S.cur?'now':''}">${x.solved?esc(base(x.title)):i===S.cur?'מחפש…':'?'}</span>`).join('')}</div>
      ${path.length?`<div class="label">המסלול שלך</div><div class="path">${S.history.length>8?'… ← ':''}${path.map((t,i)=>i===path.length-1?`<b>${esc(t)}</b>`:esc(t)).join(' ← ')}</div>`:''}
-     <div><button class="ghost" id="homeBtn">שמור וצא</button></div></div>`;
+     <div class="row" style="flex-wrap:wrap"><button class="ghost" id="invBtn">להזמין חברים לחידה הזאת</button><button class="ghost" id="homeBtn">שמור וצא</button></div></div>`;
   const bb=$('#buyBtn');if(bb)bb.onclick=()=>{p.shown++;p.bought++;save();renderSide()};
   const cbn=$('#compassBtn');if(cbn)cbn.onclick=()=>runCompass(compassMode()==='paid');
   const wl=$('#warmList');if(wl)wl.onclick=e=>{const b=e.target.closest('button');if(!b)return;const a=[...document.querySelectorAll('#article a.wl')].find(x=>x.dataset.wt===b.dataset.t);if(a){a.scrollIntoView({block:'center',behavior:'smooth'});a.focus()}};
@@ -521,6 +583,7 @@ function renderSide(){
     if(norm(b.dataset.t)===norm(p.t)){b.classList.add('right');setTimeout(()=>solvePiece(false),400)}
     else{p.mcOut=[...(p.mcOut||[]),b.dataset.t];p.wrong++;p.stations+=2;S.stations+=2;updateClues(p);save();renderStats();renderSide();$('#guessErr').textContent='לא זה. נסו שוב.'}};
   $('#homeBtn').onclick=()=>{save();renderSetup()};
+  $('#invBtn').onclick=()=>showInvite(currentInvite(),S.name);
 }
 function guess(){
   const p=piece(),v=$('#guessIn').value.trim();
@@ -679,13 +742,18 @@ function finish(){
     </div>
     <div class="card"><h3 style="margin-bottom:10px">מה גילית בדרך</h3><div class="learned">${S.pieces.map(p=>`<div><b>${esc(base(p.title))}</b>${p.extract?`<p>${esc(p.extract)}</p>`:''}</div>`).join('')}</div></div>
     <div class="card"><h3 style="margin-bottom:8px">טבלת השיאים במכשיר הזה</h3>${boardTable(b.slice(0,10))}</div>
-    <div><button class="primary" id="againBtn">חידה חדשה</button></div>
+    <div class="row" style="flex-wrap:wrap"><a class="btnlink wa" id="shareRes" target="_blank" rel="noopener" href="#">לשתף את התוצאה ולאתגר חברים</a><button class="ghost" id="invEnd">להזמין לאותה חידה</button><button class="primary" id="againBtn">חידה חדשה</button></div>
   </div>`;
+  const inv=currentInvite(),url=inviteUrl(inv,S.name);
+  const msg=`${S.gaveUp?'שיחקתי':'פתרתי'} את החידה ב"בדיוק בערך": ${sc.total} נקודות, ${S.stations} תחנות, ${fmtTime(S.timeMs)} דקות.${S.host?'\n'+S.host+', איך הלך לך?':''}\nמעזים לנסות את אותה חידה?\n${url}`;
+  $('#shareRes').href='https://wa.me/?text='+encodeURIComponent(msg);
+  const nm=S.name;$('#invEnd').onclick=()=>showInvite(inv,nm);
   $('#againBtn').onclick=renderSetup;
   S=null;
 }
 
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){const m=document.querySelector('#gCancel');if(m)m.click()}});
+INVITE=parseInvite();
 renderSetup();
 </script>
 </body>
