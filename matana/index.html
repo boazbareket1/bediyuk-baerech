@@ -138,13 +138,14 @@ const MSG={
  'סתם כי בא לי':'ראיתי את זה ונזכרתי בך. שיהיה לך כיף!'
 };
 let sel=new Set(),occ='יום הולדת',msgTouched=false;
-const isShelf=t=>ADMIN||t.shelf;
+const isShelf=t=>ADMIN||t.gift==='instant';
+const isVisible=t=>ADMIN||t.gift==='instant'||t.gift==='request';
 try{const f=localStorage.getItem('matana.from');if(f)$('#fromIn').value=f}catch(e){}
 
 function card(t){return `<button class="item" data-id="${t.id}" aria-pressed="${sel.has(t.id)}"><span class="check" aria-hidden="true">✓</span><span class="kind">${esc(t.kind)}</span><b>${esc(t.name)}</b><p>${esc(t.what)}</p></button>`}
 function render(){
   $('#shelf').innerHTML=GIFT_TOOLS.filter(isShelf).map(card).join('');
-  const req=GIFT_TOOLS.filter(t=>!isShelf(t));
+  const req=GIFT_TOOLS.filter(t=>isVisible(t)&&!isShelf(t));
   $('#reqSec').hidden=!req.length;$('#reqShelf').innerHTML=req.map(card).join('');
   $('#occ').innerHTML=OCC.map(o=>`<button class="chip" data-o="${o}" aria-pressed="${o===occ}">${o}</button>`).join('');
   summarize();
