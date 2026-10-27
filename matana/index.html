@@ -68,6 +68,10 @@ input,textarea{font:inherit;font-size:16px;color:var(--ink);background:var(--pap
 textarea{font-family:var(--read);font-size:18px;min-height:130px;resize:vertical;line-height:1.6}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
 .chip{font:inherit;font-size:15px;border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:999px;padding:6px 14px;cursor:pointer}
+.wraps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.wrapopt{font:inherit;color:inherit;background:var(--card);border:2px solid var(--line);border-radius:12px;padding:6px 6px 8px;cursor:pointer;display:grid;gap:6px;text-align:center;font-size:15px}
+.wrapopt img{width:100%;aspect-ratio:1200/630;object-fit:cover;border-radius:8px;display:block}
+.wrapopt[aria-pressed="true"]{border-color:var(--ribbon);font-weight:500}
 .chip[aria-pressed="true"]{background:var(--wrap);border-color:var(--wrap);color:#fff}
 .err{color:var(--err);font-size:14px;min-height:1.2em;margin:0}
 .btn{font:inherit;font-size:17px;font-weight:500;border:0;border-radius:999px;padding:12px 24px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:8px;justify-content:center}
@@ -113,6 +117,10 @@ footer{font-size:13px;color:var(--ink-2);text-align:center}
         <label for="fromIn">ממי<input id="fromIn" maxlength="30" placeholder="השם שלך" autocomplete="name"></label>
       </div>
       <div style="display:grid;gap:6px"><span style="font-size:14px;color:var(--ink-2)">לכבוד</span><div class="chips" id="occ"></div></div>
+      <div style="display:grid;gap:6px"><span style="font-size:14px;color:var(--ink-2)">העטיפה (כך תיראה המתנה גם בתצוגה המקדימה בוואטסאפ)</span><div class="wraps" id="wraps">
+        <button class="wrapopt" data-w="box" aria-pressed="true" type="button"><img src="og.png" alt="">קופסה</button>
+        <button class="wrapopt" data-w="balloons" aria-pressed="false" type="button"><img src="og-balloons.png" alt="">בלונים</button>
+        <button class="wrapopt" data-w="flowers" aria-pressed="false" type="button"><img src="og-flowers.png" alt="">פרחים</button></div></div>
       <label for="msgIn">הברכה<textarea id="msgIn"></textarea></label>
       <p class="err" id="formErr"></p>
     </div>
@@ -141,7 +149,8 @@ const MSG={
  'מזל טוב':'מזל טוב! הנה משהו קטן לחגוג איתו.',
  'סתם כי בא לי':'ראיתי את זה ונזכרתי בך. שיהיה לך כיף!'
 };
-let sel=new Set(),occ='יום הולדת',msgTouched=false;
+let sel=new Set(),occ='יום הולדת',msgTouched=false,wrap='box';
+const WRAP_PAGE={box:'gift.html',balloons:'gift-balloons.html',flowers:'gift-flowers.html'};
 const isShelf=t=>ADMIN||t.gift==='instant';
 const isVisible=t=>ADMIN||t.gift==='instant'||t.gift==='request';
 try{const f=localStorage.getItem('matana.from');if(f)$('#fromIn').value=f}catch(e){}
@@ -173,9 +182,11 @@ $('#msgIn').value=MSG[occ];
 $('#msgIn').addEventListener('input',()=>{msgTouched=true;$('#result').hidden=true});
 ['#toIn','#fromIn'].forEach(s=>$(s).addEventListener('input',()=>{$('#formErr').textContent='';$('#result').hidden=true}));
 
+$('#wraps').onclick=e=>{const b=e.target.closest('.wrapopt');if(!b)return;wrap=b.dataset.w;$('#wraps').querySelectorAll('.wrapopt').forEach(x=>x.setAttribute('aria-pressed',x===b));$('#result').hidden=true};
 function giftLink(){
   const d={t:$('#toIn').value.trim(),f:$('#fromIn').value.trim(),o:occ,m:$('#msgIn').value.trim(),a:[...sel]};
-  return new URL('gift.html?d='+giftEncode(d),location.href).href;
+  d.s=wrap;
+  return new URL(WRAP_PAGE[wrap]+'?d='+giftEncode(d),location.href).href;
 }
 async function copy(text,btn){
   try{await navigator.clipboard.writeText(text);btn.textContent='הועתק';setTimeout(()=>btn.textContent='להעתיק',1600)}
