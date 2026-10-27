@@ -4,8 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>מדף המתנות</title>
-<meta property="og:title" content="מדף המתנות של בועז 🎁">
+<meta property="og:title" content="מדף המתנות של בועז">
 <meta property="og:description" content="בוחרים משחק או כלי, כותבים ברכה, ושולחים לחבר חבילה עטופה.">
+<meta property="og:image" content="https://boazbareket1.github.io/bediyuk-baerech/matana/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:type" content="website">
 <meta name="description" content="בוחרים משחק או כלי, כותבים ברכה, ושולחים לחבר חבילה עטופה.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -185,12 +189,12 @@ $('#goBtn').onclick=()=>{
   try{localStorage.setItem('matana.from',from)}catch(e){}
   const r=$('#result');
   if(needsRequest()){
-    const text=`היי בועז, זה ${from} 🙂\nאני רוצה לשלוח מתנה ל${to} (${occ}) מתוך מדף המתנות:\n${chosen().map(t=>'• '+t.name).join('\n')}\n\nהברכה שכתבתי:\n${$('#msgIn').value.trim()}\n\nאפשר לקבל ממך קישור למתנה?`;
+    const text=`היי בועז, זה ${from}\nאני רוצה לשלוח מתנה ל${to} (${occ}) מתוך מדף המתנות:\n${chosen().map(t=>'• '+t.name).join('\n')}\n\nהברכה שכתבתי:\n${$('#msgIn').value.trim()}\n\nאפשר לקבל ממך קישור למתנה?`;
     const wa=(BOAZ_WA?'https://wa.me/'+BOAZ_WA:'https://wa.me/')+'?text='+encodeURIComponent(text);
     r.innerHTML=`<h3>הבקשה מוכנה</h3><p class="summary">ההודעה נפתחת בוואטסאפ${BOAZ_WA?' אל בועז':'. בחרו את הצ\'אט עם בועז'} ושולחים. בועז יחזיר קישור לחבילה העטופה.</p><div class="actions"><a class="btn wa" href="${esc(wa)}" target="_blank" rel="noopener">לשלוח לבועז בוואטסאפ</a></div>`;
   }else{
     const link=giftLink();
-    const share=`${to}, הגיעה אליך מתנה ממני 🎁\nפותחים את החבילה כאן:\n${link}`;
+    const share=`${to}, הגיעה אליך מתנה ממני\nפותחים את החבילה כאן:\n${link}`;
     r.innerHTML=`<h3>המתנה עטופה</h3><p class="summary">זה הקישור לחבילה. שולחים אותו ל${esc(to)}, והחבילה נפתחת בלחיצה.</p>
       <div class="linkbox" id="linkBox">${esc(link)}</div>
       <div class="actions"><a class="btn wa" href="${esc('https://wa.me/?text='+encodeURIComponent(share))}" target="_blank" rel="noopener">לשלוח בוואטסאפ</a>
